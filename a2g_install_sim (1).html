@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A2G | Immersive 3D Aviation Connectivity Experience</title>
+<style>
+:root{--bg:#050a14;--ink:#eaf2ff;--mute:#9bb0cf;--acc:#ff4d4d;--cy:#37d4ff;--panel:rgba(8,16,32,.8);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#card{position:fixed;left:clamp(14px,4vw,56px);bottom:clamp(70px,12vh,110px);width:min(440px,calc(100vw - 28px));background:var(--panel);border:1px solid rgba(55,212,255,.35);border-left:4px solid var(--acc);padding:18px 20px;backdrop-filter:blur(8px);border-radius:4px}
+#card h1{margin:0 0 6px;font-size:clamp(20px,3.2vw,29px);font-weight:600}
+#card p{margin:0 0 12px;color:var(--mute);line-height:1.5;font-size:14.5px}
+#spec{display:flex;gap:8px;flex-wrap:wrap}
+#spec div{border:1px solid rgba(255,255,255,.18);padding:6px 10px;font-size:12.5px;border-radius:3px;color:var(--mute)}
+#spec b{display:block;color:var(--cy);font-weight:600;font-size:14px}
+#nav{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;align-items:center;gap:8px}
+#nav button{background:var(--panel);color:var(--ink);border:1px solid rgba(55,212,255,.4);width:42px;height:38px;font-size:18px;cursor:pointer;border-radius:4px}
+#nav button:focus-visible,.dot:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+.dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--cy);background:transparent;cursor:pointer;padding:0}
+.dot.on{background:var(--acc);border-color:var(--acc)}
+#tag{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:16px;color:var(--mute);font-size:12px}
+.lbl{position:fixed;left:0;top:0;pointer-events:none;font-size:12px;padding:2px 7px;border:1px solid var(--cy);background:rgba(5,10,20,.75);border-radius:3px;white-space:nowrap;transform:translate(-50%,-100%);opacity:.4}
+.lbl.on{opacity:1;border-color:var(--acc);color:#fff}
+@media(max-width:600px){#card{bottom:66px;padding:12px 14px}#card p{font-size:13px;margin-bottom:8px}}
+
+#brand{position:fixed;top:22px;left:clamp(14px,4vw,56px);z-index:3;letter-spacing:.17em;font-size:11px;font-weight:700;color:#8bddff;text-shadow:0 0 16px #00aaff}
+#brand strong{display:block;color:white;font-size:clamp(17px,2.2vw,25px);letter-spacing:.06em;margin-top:6px}
+#status{position:fixed;right:20px;bottom:24px;color:#87a5c5;font-size:11px;letter-spacing:.1em;text-align:right;pointer-events:none}
+#card{box-shadow:0 18px 70px #0009, inset 0 1px #ffffff1a;border-radius:13px;background:linear-gradient(130deg,rgba(8,21,40,.56),rgba(4,11,25,.40));max-height:50vh;overflow:auto;z-index:2;backdrop-filter:blur(18px) saturate(1.35)}
+#card h1{font-weight:750;letter-spacing:-.025em}
+#spec div{border-radius:8px;background:rgba(255,255,255,.035);min-width:85px;backdrop-filter:blur(9px)}
+#spec b{margin-top:4px}
+#nav{z-index:4;gap:12px}#nav button{border-radius:10px;backdrop-filter:blur(12px)}
+.dot{height:10px;width:10px}.dot.on{box-shadow:0 0 13px #ff4d4d}
+#tag{top:30px;right:22px}#disclaimer{display:none;color:#ffdc9b;font-size:11px;margin-top:10px;line-height:1.5}
+@media(max-width:600px){#brand{top:13px}#tag{top:76px;right:auto;left:14px;font-size:10px}#status{display:none}#card{max-height:43vh;bottom:65px}#nav{gap:7px}.dot{height:9px;width:9px}}
+
+/* Opening 3D MRO installation experience */
+.intro-root{position:fixed;inset:0;z-index:20;pointer-events:none;color:#e9faff;font-family:Segoe UI,Arial,sans-serif}
+.intro-root::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,9,24,.65),transparent 59%),linear-gradient(0deg,rgba(2,9,24,.9),transparent 36%);pointer-events:none}
+.intro-heading,.intro-activity,.intro-clock,.intro-bottom{position:absolute;z-index:1}
+.intro-heading{top:25px;left:3.5vw}.intro-kicker,.mini-label{font-size:11px;letter-spacing:.19em;color:#89d6ff;font-weight:750}.intro-heading h2{margin:9px 0 0;font-size:clamp(17px,2.4vw,30px);letter-spacing:.04em;max-width:600px}.intro-heading em{font-style:normal;color:#4cddff}
+.intro-activity{left:3.5vw;top:135px;width:min(390px,34vw);padding:22px;background:rgba(4,20,38,.44);border:1px solid #6ad4ff55;border-left:3px solid #35dcff;border-radius:16px;backdrop-filter:blur(16px)}
+.intro-activity .mini-label{display:flex;justify-content:space-between}.intro-activity h3{font-size:clamp(19px,2vw,27px);margin:18px 0 9px}.intro-activity p{line-height:1.55;font-size:14px;color:#cae0f2;min-height:65px}.taskTags{display:flex;flex-wrap:wrap;gap:7px}.taskTags span{font-size:11px;background:#0b415a99;border:1px solid #54c5e355;padding:7px 9px;border-radius:6px}
+.intro-clock{right:3.5vw;top:24px;text-align:right;width:270px;padding:18px;background:rgba(4,20,38,.46);border:1px solid #68dfff77;border-radius:16px;backdrop-filter:blur(17px)}
+#digitalClock{font:800 clamp(42px,5vw,73px)/1.2 ui-monospace,Consolas,monospace;color:#fff;letter-spacing:-.05em;text-shadow:0 0 22px #2bcfff55}#digitalClock span{color:#2ad9ff}#digitalClock sup{font-size:12px;letter-spacing:0;margin-left:5px;color:#82dfff}
+.team-head{display:flex;justify-content:flex-end;gap:20px;align-items:center;border-top:1px solid #ffffff35;padding-top:12px;font-size:12px;color:#b9dbea}.team-head strong{font-size:32px;color:#6ff2ff}#departmentName{color:#fff;font-weight:700;letter-spacing:.11em;font-size:13px}#parallelStatus{font-size:11px;line-height:1.5;color:#ffdb97}
+.intro-bottom{bottom:24px;left:3.5vw;right:3.5vw;pointer-events:auto}.intro-rail{height:7px;border-radius:10px;background:#ffffff33;position:relative;margin:0 0 23px;overflow:visible}.intro-progress{width:0;height:100%;border-radius:10px;background:linear-gradient(90deg,#37d4ff,#ec6873);box-shadow:0 0 15px #43d8ff}.intro-rail i{position:absolute;top:-5px;width:3px;height:17px;background:white;opacity:.75}.intro-controls{display:flex;gap:11px;flex-wrap:wrap}.intro-controls button{pointer-events:auto;cursor:pointer;border:1px solid #73cfe488;border-radius:9px;padding:12px 17px;background:rgba(6,23,43,.79);color:#e9faff;font-weight:750;letter-spacing:.03em}.intro-controls #introSkip{margin-left:auto;border-color:#7ce5fa;background:#16758a99}.intro-controls button:hover{background:#155a7c}.intro-note{margin-top:11px;color:#94abc2;font-size:10px;letter-spacing:.09em}
+#altBubble{position:fixed;top:133px;right:18px;z-index:6;border-left:3px solid #4deaff;background:#041426aa;border-radius:9px;padding:11px 17px;backdrop-filter:blur(10px);display:none;color:#f6fdff}#altBubble span,#altBubble small{display:block;color:#9cdef4;font-size:10px;letter-spacing:.08em}#altBubble strong{display:block;font-size:30px;letter-spacing:.1em;color:#77e7ff}#altBubble b{display:block;font-size:16px;margin-bottom:4px}
+@media(max-width:720px){.intro-heading{top:12px;left:13px;right:12px}.intro-heading h2{font-size:16px}.intro-activity{left:12px;top:101px;width:calc(100vw - 226px);padding:12px}.intro-activity h3{font-size:17px;margin:9px 0}.intro-activity p{font-size:11px;min-height:30px}.intro-clock{right:10px;top:100px;width:172px;padding:10px}#digitalClock{font-size:35px}.team-head strong{font-size:23px}.intro-bottom{left:12px;right:12px;bottom:11px}.intro-controls{gap:5px}.intro-controls button{font-size:10px;padding:10px 9px}.intro-controls #introSkip{margin-left:0}.intro-note{font-size:8px}.taskTags span{font-size:9px;padding:5px}}
+#digitalClock{font-size:clamp(60px,7.4vw,112px)!important}.intro-clock{width:min(400px,46vw)!important}.team-head strong{font-size:44px!important}#departmentName{font-size:15px!important}.intro-activity{width:min(430px,36vw)!important}.intro-activity h3{font-size:clamp(22px,2.3vw,30px)!important}.intro-clock,.intro-activity{background:rgba(4,20,38,.08)!important;backdrop-filter:blur(2px)!important;border-color:#68dfff33!important;box-shadow:none!important}.intro-clock *,.intro-activity *{text-shadow:0 1px 8px #000d}#kitList{position:fixed;right:3.5vw;top:262px;width:min(340px,42vw);z-index:19;pointer-events:none;padding:9px 12px;background:rgba(4,20,38,.12);border:1px solid #68dfff33;border-radius:12px;font:600 10.5px/1.7 ui-monospace,Consolas,monospace;color:#bcd9ea;text-shadow:0 1px 6px #000;display:none}#kitList .hd{color:#8fd8ff;font-weight:800;letter-spacing:.1em}#kitList .kr i{float:right;font-style:normal;color:#8fb3cf;font-size:9.5px}#kitList .kr.ok i{color:#9fd9b4}#kitList .kr{opacity:.45}#kitList .kr b{visibility:hidden;color:#3dff7a;display:inline-block;width:14px}#kitList .kr.ok{opacity:1;color:#d2ffe0}#kitList .kr.ok b{visibility:visible}@media(max-width:720px){#digitalClock{font-size:38px!important}.intro-clock{width:178px!important}}</style></head><body>
+<div id="brand">A2G · NEXT GENERATION<strong>CONNECTED SKIES</strong></div><div id="card"><h1 id="t"></h1><p id="d"></p><div id="spec"></div><div id="disclaimer">SCHEMATIC VISUALIZATION · 45,000 ft altitude, 75 km sector reach and 120 km site intervals are user-provided design targets, not validated performance figures. Real coverage requires terrain, interference, link-budget and regulatory assessment.</div></div><div id="status">INTERACTIVE 3D · CONCEPT DEMONSTRATOR</div>
+<div id="nav"><button id="prev" aria-label="Previous slide">&#8249;</button><span id="dots" style="display:flex;gap:8px"></span><button id="next" aria-label="Next slide">&#8250;</button></div>
+<div id="tag">Drag to orbit &middot; arrow keys to navigate</div>
+<div id="installIntro" class="intro-root" aria-label="Installation timeline simulation">
+ <div class="intro-heading"><span class="intro-kicker">AIRCRAFT CONNECTIVITY · MRO INSTALLATION SIMULATION</span><h2>FROM KIT INSPECTION TO <em>CONNECTED AIRCRAFT</em></h2></div>
+ <section class="intro-activity" aria-live="polite"><span class="mini-label">CURRENT ACTIVITY <b id="stageCode">00 / 09</b></span><h3 id="stageTitle">Materials inspection</h3><p id="stageInfo"></p><div class="taskTags" id="stageTags"></div></section>
+ <aside class="intro-clock"><span class="mini-label">⏱ INSTALLATION ELAPSED TIME</span><div id="digitalClock">00<span>:</span>00<sup>HR</sup></div><div class="team-head"><span>♟ TEAM ON TASK</span><strong id="teamCount">02</strong></div><div id="departmentName">LOGISTICS TEAM</div><p id="parallelStatus">Pre-installation · not counted</p></aside>
+ <div class="intro-bottom"><div class="intro-rail"><div class="intro-progress" id="installProgress"></div><div id="introMarkers"></div></div><div class="intro-controls"><button id="introBack" title="Previous activity">‹ PREV</button><button id="introPlay">❚❚ PAUSE</button><button id="introNext">NEXT ›</button><button id="introSkip">ENTER 3D WALKTHROUGH ↗</button></div><div class="intro-note" id="introNote">SCHEMATIC DEMONSTRATION · NOT AN APPROVED MAINTENANCE PROCEDURE</div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+// ---------- slide data (aircraft: nose at +x, left side = -z, 1 unit = 1 m) ----------
+const slides=[
+{t:"A2G aircraft installation",k:null,f:[0,0,0],o:[8,5,40],d:"A320neo-size aircraft, to scale. The antenna on the belly feeds the radio and baseband units in the forward avionics bay, the cabin server drives up to three ceiling Wi-Fi access points, and a control panel sits at the left forward door.",s:[["Antenna","Lower fuselage"],["Avionics","Forward, below floor"],["Wi-Fi APs","3 on ceiling"]]},
+{t:"A2G antenna",k:"ant",f:[7,-2.0,0],o:[.9,-.35,1.2],d:"A low-profile blade antenna with a fairing, bolted to the lower fuselage skin forward of the wing. It links to ground towers along the route and feeds the radio head through coax. Low aerodynamic resistance does not mean zero drag.",s:[["Dimensions","17.4 × 8.382 × 7.392 cm"],["Weight","0.350 kg"],["Profile","Minimal drag design"],["Structure","Aluminium + PEI fairing"]]},
+{t:"Radio Head (RRH)",k:"rrh",f:[9,-1.28,.2],o:[.5,.3,.8],d:"Finned aluminium unit on the avionics shelf. It mitigates potential ATCRBS burst interference affecting the LTE downlink, and connects the antenna to the baseband unit.",s:[["Dimensions","29.21 × 17.4 × 9.74 cm"],["Weight","4.4 kg"]]},
+{t:"Baseband unit (BMU)",k:"bmu",f:[10,-1.29,.2],o:[.45,.3,.75],d:"Part of the ACGC station system. The BMU manages the ACGC station and links the radio head to the cabin server.",s:[["Dimensions","29.2 × 17.4 × 6.7 cm"],["Weight","2.5 kg"]]},
+{t:"Cabin server",k:"cs",f:[11.3,-1.2,.1],o:[.7,.35,1.0],d:"Runs the cabin network. It must include an ARINC 429 card that supports both receive and transmit channels. One riser takes its data up to the ceiling Wi-Fi network.",s:[["Dimensions","12.4 × 19.4 × 32.2 cm"],["Weight","5.6 kg"]]},
+{t:"Control panel",k:"cp",f:[13.2,.2,-1.84],o:[.6,.15,1.3],d:"Located close to the cabin attendant panel at the left forward door. It offers basic on/off control and monitoring, including Wi-Fi in flight mode.",s:[["Location","LH forward door"],["Functions","On/off, monitoring"]]},
+{t:"Wi-Fi access points",k:"wap",f:[-1,1.6,0],o:[1.2,-.7,1.7],d:"Three dual-band Wi-Fi access points hang from the cabin ceiling, forward, mid and aft. Internal antennas and adaptive RF monitoring keep coverage even.",s:[["Dimensions","5.943 × 17.323 × 27.092 cm"],["Weight","1.9 kg each"]]},
+{t:"Signal path",k:"all",f:[7,-.2,0],o:[-9,3,19],d:"Antenna, radio head and baseband unit feed the cabin server. From there one riser serves the ceiling trunk to the three access points and a branch serves the control panel.",s:[["RF coax","Cyan"],["Data","Orange"],["Control","Red"]]},
+ {t:"GROUND NETWORK · 3D SECTOR VIEW",k:"ground",f:[0,1,0],o:[24,19,31],d:"Explore GSM-style radio towers and sector footprints aligned to an air-to-ground flight corridor. Each of three aligned 120° sectors has a concept radius of up to 75 km from its site as a CONCEPT target; towers are spaced 120 km apart along the corridor. The drawn wedges are schematic, not RF prediction maps.",s:[["Sector reach","75 km · concept target"],["Site intervals","120 km · planned"],["Sectorization","3 sectors / site"],["Status","Feasibility unverified"]]},
+ {t:"45,000 FT FLIGHT ALTITUDE · HANDOVER",k:"flight",f:[0,2.3,0],o:[21,15,28],d:"An aircraft follows the corridor at a proposed altitude of 45,000 feet (13.716 km). Bright red site-to-aircraft radio-link beams show the active site; an amber link appears during animated handover as the aircraft crosses between sites. Neighbor sites illustrate overlapping sector footprints and successive handover opportunities. At 45,000 ft, real line-of-sight and received signal levels require detailed engineering validation.",s:[["Aircraft altitude","45,000 ft · target"],["Handover","Site A → B → C"],["Coverage","Concept, not guaranteed"],["Validation","RF link budget required"]]}
+];
+// ---------- scene ----------
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,innerWidth<820?1.5:2));document.body.prepend(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0x050a14);S.fog=new THREE.FogExp2(0x050a14,.009);
+const C=new THREE.PerspectiveCamera(50,1,.02,300);
+S.add(new THREE.AmbientLight(0x8aa4c8,.9));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(8,14,10);S.add(dl);
+const fl=new THREE.PointLight(0xffffff,1.1,4);S.add(fl);
+const grid=new THREE.GridHelper(120,80,0x37d4ff,0x10284a);grid.position.y=-5;S.add(grid);
+const A=new THREE.Group();S.add(A);
+const M={alu:new THREE.MeshStandardMaterial({color:0x9aa3ad,metalness:.85,roughness:.32}),blk:new THREE.MeshStandardMaterial({color:0x14171b,metalness:.6,roughness:.5}),blk2:new THREE.MeshStandardMaterial({color:0x262c33,metalness:.5,roughness:.5}),gold:new THREE.MeshStandardMaterial({color:0xd4af37,metalness:1,roughness:.25}),wht:new THREE.MeshStandardMaterial({color:0xeef2f6,roughness:.35}),grn:new THREE.MeshBasicMaterial({color:0x3dff7a}),amb:new THREE.MeshBasicMaterial({color:0xffb02e}),cy:new THREE.MeshBasicMaterial({color:0x37d4ff})};
+const shellMats=[],lineMats=[];
+const shellM=()=>{const m=new THREE.MeshStandardMaterial({color:0xcfe3ff,transparent:true,opacity:.16,metalness:.3,roughness:.5,side:THREE.DoubleSide,depthWrite:false});shellMats.push(m);return m};
+const lineM=(c,o)=>{const m=new THREE.LineBasicMaterial({color:c,transparent:true,opacity:o});lineMats.push(m);return m};
+function B(w,h,d,m,x,y,z,p){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);p.add(o);return o}
+function Cy(r,l,m,x,y,z,ax,p){const g=new THREE.CylinderGeometry(r,r,l,16);if(ax==='x')g.rotateZ(Math.PI/2);if(ax==='z')g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);p.add(o);return o}
+function edges(mesh,o){mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,25),lineM(0x7fb8ff,o||.4)))}
+// ---------- aircraft ----------
+(function(){
+ const pts=[];for(let i=0;i<=48;i++){const y=-18.8+i/48*37.6;let r=1.97;
+  if(y<-11){const u=(-11-y)/7.8;r=1.97*(1-.87*Math.pow(u,1.6))}else if(y>12){const u=(y-12)/6.8;r=1.97*Math.sqrt(Math.max(0,1-u*u))}
+  pts.push(new THREE.Vector2(Math.max(r,.04),y))}
+ const g=new THREE.LatheGeometry(pts,48);g.rotateZ(-Math.PI/2);
+ const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i);if(x<-11)p.setY(i,p.getY(i)+Math.pow((-11-x)/7.8,2)*.9)}g.computeVertexNormals();
+ const f=new THREE.Mesh(g,shellM());A.add(f);
+ for(let x=-10.5;x<=12;x+=1.1){const c=[];for(let i=0;i<=48;i++){const a=i/48*6.2832;c.push(V(x,Math.sin(a)*1.97,Math.cos(a)*1.97))}A.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c),lineM(0x37d4ff,.22)))}
+ // windows
+ const wm=new THREE.MeshBasicMaterial({color:0x0b1a30,side:THREE.DoubleSide});
+ for(let x=-11;x<=12.5;x+=.76)for(const s of[1,-1]){const w=new THREE.Mesh(new THREE.CircleGeometry(.12,16),wm);w.scale.y=1.35;w.position.set(x,.55,s*1.895);if(s<0)w.rotation.y=Math.PI;A.add(w)}
+ // floor, seats
+ const fm=new THREE.MeshStandardMaterial({color:0x34506f,transparent:true,opacity:.08,roughness:.8,depthWrite:false});B(31,.03,3.5,fm,1,-.75,0,A);
+ const sm=new THREE.MeshStandardMaterial({color:0x2b4d7c,roughness:.8});
+ 
+ // cockpit
+ for(const z of[-.6,.6]){B(.5,.1,.5,sm,16.4,-.45,z,A);B(.1,.6,.5,sm,16.15,-.15,z,A)}
+ B(.3,.5,2.2,M.blk2,17.5,0,0,A);
+ for(const z of[-.8,0,.8]){const w=B(.05,.5,.7,new THREE.MeshBasicMaterial({color:0x0b1a30}),17.2,.75,z,A);w.rotation.z=-.5}
+ // wings, engines
+ const sh=new THREE.Shape();sh.moveTo(4.5,0);sh.lineTo(-2.7,16);sh.lineTo(-4.3,16);sh.lineTo(-1.6,0);sh.closePath();
+ const wg=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:false});wg.rotateX(-Math.PI/2);
+ const half=new THREE.Group();
+ const wmesh=new THREE.Mesh(wg,new THREE.MeshStandardMaterial({color:0xcfe3ff,transparent:true,opacity:.34,metalness:.3,roughness:.5,side:THREE.DoubleSide}));wmesh.position.set(0,-1,-1.6);wmesh.rotation.x=.09;edges(wmesh,.5);half.add(wmesh);
+ const sg=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.5,.06),wmesh.material);sg.position.set(-3.5,.95,-17.1);sg.rotation.x=.3;sg.rotation.z=.25;edges(sg,.5);half.add(sg);
+ const ng=new THREE.CylinderGeometry(.95,.85,3.8,32,1,true);ng.rotateZ(Math.PI/2);const nac=new THREE.Mesh(ng,shellM());nac.material.opacity=.4;nac.position.set(3.9,-1.55,-6);half.add(nac);
+ const fan=new THREE.Mesh(new THREE.CircleGeometry(.88,32),M.blk2);fan.rotation.y=Math.PI/2;fan.position.set(5.75,-1.55,-6);half.add(fan);
+ const sp=new THREE.Mesh(new THREE.ConeGeometry(.2,.5,16),M.alu);sp.rotation.z=-Math.PI/2;sp.position.set(6,-1.55,-6);half.add(sp);
+ B(2.2,.9,.12,wmesh.material,2.8,-.95,-6,half);
+ A.add(half);const h2=half.clone();h2.scale.z=-1;A.add(h2);
+ // tail
+ const hs=new THREE.Shape();hs.moveTo(-14,0);hs.lineTo(-17.5,5.5);hs.lineTo(-18.6,5.5);hs.lineTo(-17.2,0);hs.closePath();
+ const hg=new THREE.ExtrudeGeometry(hs,{depth:.1,bevelEnabled:false});hg.rotateX(-Math.PI/2);
+ const hm=new THREE.Mesh(hg,wmesh.material);hm.position.set(0,.85,-.3);edges(hm,.5);const hh=new THREE.Group();hh.add(hm);A.add(hh);const hh2=hh.clone();hh2.scale.z=-1;A.add(hh2);
+ const fs=new THREE.Shape();fs.moveTo(-10.5,1.7);fs.lineTo(-14.5,8);fs.lineTo(-17.5,8);fs.lineTo(-18.5,1.2);fs.closePath();
+ const fg=new THREE.ExtrudeGeometry(fs,{depth:.2,bevelEnabled:false});fg.translate(0,0,-.1);const fin=new THREE.Mesh(fg,wmesh.material);edges(fin,.5);A.add(fin);
+ // fwd left door outline
+ const dm=new THREE.Mesh(new THREE.PlaneGeometry(1,1.9),new THREE.MeshBasicMaterial({visible:false}));
+ const dl2=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1,1.9)),lineM(0xffffff,.5));dl2.position.set(14.8,.1,-1.88);A.add(dl2);
+})();
+// ---------- hardware ----------
+function fins(n,len,h,w,m,x,y,z,p){for(let i=0;i<n;i++)B(len,h,.0045,m,x,y,z-w/2+i*w/(n-1),p)}
+function mil(p,x,y,z,ax){Cy(.018,.012,M.blk2,x,y,z,ax,p);Cy(.012,.035,M.gold,x+(ax==='x'?.02:0),y,z+(ax==='z'?.02:0),ax,p)}
+function buildRRH(){const g=new THREE.Group();B(.289,.03,.174,M.blk,0,0,0,g);fins(15,.255,.05,.15,M.alu,-.015,.04,0,g);B(.03,.01,.23,M.alu,-.15,-.01,0,g);B(.03,.01,.23,M.alu,.15,-.01,0,g);for(let i=0;i<4;i++)mil(g,.152,.01,-.06+i*.04,'x');B(.05,.002,.03,M.wht,-.1,.066,.07,g);return g}
+function buildBMU(){const g=new THREE.Group();B(.292,.04,.174,M.blk,0,0,0,g);fins(9,.2,.025,.14,M.alu,-.03,.03,0,g);B(.03,.01,.23,M.alu,-.15,-.015,0,g);B(.03,.01,.23,M.alu,.15,-.015,0,g);for(let i=0;i<5;i++)mil(g,.152,0,-.07+i*.035,'x');B(.05,.002,.03,new THREE.MeshBasicMaterial({color:0xffcc00}),.1,.021,.06,g);return g}
+function buildCS(){const g=new THREE.Group();B(.322,.194,.124,M.blk,0,0,0,g);B(.322,.194,.01,M.blk2,0,0,.067,g);for(let i=0;i<4;i++)mil(g,-.1+i*.07,.02,.075,'z');for(let i=0;i<6;i++)B(.012,.012,.006,i%3?M.grn:M.amb,-.12+i*.03,.075,.076,g);B(.12,.012,.02,M.alu,-.08,.085,.09,g);B(.12,.012,.02,M.alu,.08,-.085,.09,g);for(let i=0;i<12;i++)B(.24,.003,.006,M.blk2,0,.0975,-.05+i*.009,g);B(.34,.01,.14,M.alu,0,-.102,0,g);B(.07,.002,.04,M.wht,.12,-.04,.073,g);return g}
+function buildWAP(){const g=new THREE.Group();B(.254,.05,.203,M.blk,0,0,0,g);fins(8,.23,.02,.17,M.alu,0,.035,0,g);for(let i=0;i<4;i++)Cy(.012,.03,M.gold,-.09+i*.06,0,.115,'z',g);const dm=new THREE.Mesh(new THREE.SphereGeometry(.075,24,12,0,Math.PI*2,Math.PI/2,Math.PI/2),new THREE.MeshStandardMaterial({color:0xf2f6fa,transparent:true,opacity:.85,roughness:.3}));dm.scale.y=.6;dm.position.y=-.025;g.add(dm);const r=new THREE.Mesh(new THREE.TorusGeometry(.078,.004,8,32),M.cy);r.rotation.x=Math.PI/2;r.position.y=-.026;g.add(r);for(const s of[-1,1])Cy(.01,.12,M.alu,s*.09,.085,0,'y',g);return g}
+function buildANT(){const g=new THREE.Group();B(.55,.012,.3,M.alu,0,0,0,g);for(const x of[-.24,0,.24])for(const z of[-.12,.12])Cy(.01,.008,M.blk2,x,-.008,z,'y',g);
+ const f=new THREE.Mesh(new THREE.SphereGeometry(1,28,12,0,Math.PI*2,Math.PI/2,Math.PI/2),M.wht);f.scale.set(.22,.05,.12);f.position.y=-.006;g.add(f);
+ const bs=new THREE.Shape();bs.moveTo(-.16,0);bs.lineTo(.16,0);bs.lineTo(.06,-.22);bs.lineTo(-.04,-.22);bs.closePath();
+ for(const x of[-.14,.14]){const bg=new THREE.ExtrudeGeometry(bs,{depth:.028,bevelEnabled:false});bg.translate(x,-.04,-.014);g.add(new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0x1a1d22,roughness:.4})))}return g}
+function buildCP(){const g=new THREE.Group();B(.34,.18,.02,M.blk2,0,0,0,g);const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');
+ x.fillStyle='#1b1f24';x.fillRect(0,0,512,256);x.fillStyle='#050a05';[[24,24],[190,24],[356,24]].forEach(p=>x.fillRect(p[0],p[1],130,66));
+ x.font='bold 54px monospace';x.fillStyle='#ff3b30';x.fillText('88.',34,78);x.fillStyle='#37d4ff';x.fillText('01.',200,78);x.fillStyle='#3dff7a';x.fillText('ON',376,78);
+ x.fillStyle='#9aa3ad';x.font='20px sans-serif';x.fillText('WIFI',50,120);x.fillText('MODE',216,120);x.fillText('STATUS',380,120);
+ [[40,150],[200,150],[360,150]].forEach((p,i)=>{x.fillStyle='#0d1014';x.fillRect(p[0],p[1],110,70);x.fillStyle=i==1?'#ffb02e':'#3dff7a';x.fillRect(p[0]+12,p[1]+16,86,16);x.fillStyle='#9aa3ad';x.fillText(['ON/OFF','FLIGHT','MON'][i],p[0]+22,p[1]+58)});
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(.31,.155),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));pl.position.z=.0105;g.add(pl);return g}
+const items={};
+function place(key,label,g,x,y,z,mult){g.position.set(x,y,z);A.add(g);const bb=new THREE.Box3().setFromObject(g),s=bb.getSize(V(0,0,0));
+ const ol=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(s.x+.04,s.y+.04,s.z+.04)),new THREE.LineBasicMaterial({color:0xff4d4d}));ol.position.copy(bb.getCenter(V(0,0,0)));ol.visible=false;A.add(ol);
+ const el=document.createElement('div');el.className='lbl';el.textContent=label;document.body.appendChild(el);
+ (items[key]=items[key]||[]).push({g,ol,el})}
+// avionics shelf (below cabin floor)
+{const gm=new THREE.MeshStandardMaterial({color:0x8fc4ee,transparent:true,opacity:.1,roughness:.4,depthWrite:false,side:THREE.DoubleSide});const sh1=B(3.6,.02,1,gm,10.2,-1.34,.1,A),sh2=B(3.6,.12,.02,gm,10.2,-1.3,-.4,A);[sh1,sh2].forEach(m=>m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry),new THREE.LineBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.35}))))}
+function buildANT2(){const g=new THREE.Group();
+ const wh=new THREE.MeshStandardMaterial({color:0xf4f6f8,roughness:.3,metalness:.05});
+ const fl=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.012,48),wh);fl.scale.z=.62;g.add(fl);
+ const rg=new THREE.Mesh(new THREE.TorusGeometry(.22,.006,8,48),M.blk);rg.rotation.x=Math.PI/2;rg.scale.y=.62;rg.position.y=-.007;g.add(rg);
+ const bs=new THREE.Shape();bs.moveTo(-.17,0);bs.lineTo(.17,0);bs.lineTo(.08,-.2);bs.lineTo(-.03,-.2);bs.closePath();
+ const bg=new THREE.ExtrudeGeometry(bs,{depth:.09,bevelEnabled:true,bevelSize:.02,bevelThickness:.02,bevelSegments:3,curveSegments:6});bg.translate(0,-.006,-.045);g.add(new THREE.Mesh(bg,wh));
+ for(const z of[-.03,.03]){const b=new THREE.Mesh(new THREE.CylinderGeometry(.013,.013,.012,6),M.alu);b.position.set(.025,-.224,z);g.add(b)}
+ return g}
+place('ant','A2G antenna',buildANT2(),7,-1.97,0);
+place('rrh','RRH',buildRRH(),9,-1.3,.2);
+place('bmu','BMU',buildBMU(),10,-1.3,.2);
+place('cs','Cabin server',buildCS(),11.3,-1.22,.1);
+place('cp','Control panel',buildCP(),13.2,.2,-1.84);
+[[9,'WAP 1'],[-1,'WAP 2'],[-11,'WAP 3']].forEach(a=>place('wap',a[1],buildWAP(),a[0],1.6,0));
+// ---------- cabling ----------
+const pulses=[],cables=[];
+function cable(pts,col,r){const cv=new THREE.CatmullRomCurve3(pts.map(p=>V(...p)),false,'catmullrom',.2);const m=new THREE.Mesh(new THREE.TubeGeometry(cv,60,r||.012,6),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));A.add(m);cables.push(m);
+ const s=new THREE.Mesh(new THREE.SphereGeometry(.03,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));A.add(s);pulses.push({s,cv,o:Math.random()})}
+cable([[7,-1.95,0],[7,-1.55,.1],[8.3,-1.4,.12],[8.86,-1.3,.2]],0x37d4ff);
+cable([[9.17,-1.3,.2],[9.5,-1.26,.28],[9.84,-1.3,.2]],0x37d4ff);
+cable([[10.17,-1.3,.2],[10.6,-1.18,.3],[11.15,-1.13,.2]],0x37d4ff);
+cable([[11.3,-1.1,.1],[11.5,-.9,.85],[12.2,-.75,.9],[12.2,1.65,.9],[11.8,1.7,0]],0xffb02e,.016);
+cable([[11.8,1.7,0],[9,1.7,0],[-1,1.7,0],[-11,1.7,0]],0xffb02e,.016);
+cable([[11.4,-1.2,-.1],[12.5,-1.15,-1.0],[13.2,-.7,-1.75],[13.2,.05,-1.8]],0xff4d4d);
+// ---------- optional ground network showcase (schematic: 1 unit = 10 km horizontally) ----------
+const G=new THREE.Group();S.add(G);G.visible=false;
+const groundMat=new THREE.MeshStandardMaterial({color:0x0a2840,roughness:1,metalness:.15});
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(75,35,20,12),groundMat);plane.rotation.x=-Math.PI/2;plane.position.y=-3.3;G.add(plane);
+const gg=new THREE.GridHelper(76,38,0x286d97,0x173450);gg.position.y=-3.27;G.add(gg);
+const towerMat=new THREE.MeshStandardMaterial({color:0xb7d6eb,metalness:.8,roughness:.3});
+const signalMat=new THREE.MeshBasicMaterial({color:0x34d8ff,transparent:true,opacity:.15,side:THREE.DoubleSide,depthWrite:false});
+const antennaMat=new THREE.MeshBasicMaterial({color:0xffa43b});
+const towerGroup=new THREE.Group();G.add(towerGroup);
+function addTower(x,label){const tower=new THREE.Group();tower.position.set(x,-3.2,0);towerGroup.add(tower);
+ for(let h=0;h<3.0;h+=.45){let r=.42*(1-h/4);for(const a of [-1,1]){const leg=B(.06,.48,.06,towerMat,a*r,h+.23,0,tower);leg.rotation.z=a*.14}B(2*r,.045,.06,towerMat,0,h+.45,0,tower);const dia=B(.035,.62,.04,towerMat,0,h+.23,0,tower);dia.rotation.z=.75}
+ Cy(.055,.9,towerMat,0,3.45,0,'y',tower);
+ for(let i=0;i<3;i++){const a=i*2*Math.PI/3;const panel=B(.16,.68,.13,antennaMat,Math.cos(a)*.22,3.05,Math.sin(a)*.22,tower);panel.rotation.y=-a+Math.PI/2;}
+ const light=new THREE.PointLight(0x32cfff,.8,5);light.position.set(0,3.6,0);tower.add(light);
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;const cx=canvas.getContext('2d');cx.fillStyle='#d5f5ff';cx.font='bold 46px Arial';cx.textAlign='center';cx.fillText(label,256,70);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),transparent:true,depthTest:false}));sprite.scale.set(3.3,.82,1);sprite.position.set(0,4.45,0);tower.add(sprite);
+ for(let i=0;i<3;i++){const start=i*Math.PI*2/3-Math.PI/3+.045,end=(i+1)*Math.PI*2/3-.045;const shape=new THREE.Shape();shape.moveTo(0,0);for(let j=0;j<=48;j++){const a=start+(end-start)*j/48;shape.lineTo(7.5*Math.cos(a),7.5*Math.sin(a))}shape.closePath();const sector=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({color:[0x00cfff,0x28ebbd,0xffb35c][i],transparent:true,opacity:.095,side:THREE.DoubleSide,depthWrite:false}));sector.rotation.x=-Math.PI/2;sector.position.set(x,-3.15,.02);G.add(sector);
+ const points=[];for(let j=0;j<=48;j++){const a=start+(end-start)*j/48;points.push(V(x+7.5*Math.cos(a),-3.11,7.5*Math.sin(a)))}G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:[0x00cfff,0x28ebbd,0xffb35c][i],transparent:true,opacity:.55})));}
+}
+[-12,0,12].forEach((x,i)=>addTower(x,'GSM SITE '+String.fromCharCode(65+i)));
+const corridor=new THREE.Mesh(new THREE.PlaneGeometry(49,1.1),new THREE.MeshBasicMaterial({color:0x4ec9ff,transparent:true,opacity:.12,side:THREE.DoubleSide}));corridor.rotation.x=-Math.PI/2;corridor.position.y=-3.1;G.add(corridor);
+const flightLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-22,6.8,0),V(22,6.8,0)]),new THREE.LineDashedMaterial({color:0xffffff,dashSize:.6,gapSize:.35,transparent:true,opacity:.6}));flightLine.computeLineDistances();G.add(flightLine);
+// Sculpted, readable aircraft silhouette: nose forward +X, flying above the tower tops.
+const airplane=new THREE.Group();G.add(airplane);airplane.position.set(-20,6.8,0);
+const jetWhite=new THREE.MeshStandardMaterial({color:0xf5fbff,metalness:.35,roughness:.27,emissive:0x132d40});
+const jetBlue=new THREE.MeshStandardMaterial({color:0x2bb9ef,metalness:.65,roughness:.3,emissive:0x064060});
+const fuselage=new THREE.Mesh(new THREE.CylinderGeometry(.22,.30,2.8,20),jetWhite);fuselage.rotation.z=-Math.PI/2;airplane.add(fuselage);
+const nose=new THREE.Mesh(new THREE.ConeGeometry(.22,.7,20),jetWhite);nose.rotation.z=-Math.PI/2;nose.position.x=1.73;airplane.add(nose);
+const tailcone=new THREE.Mesh(new THREE.ConeGeometry(.25,.48,20),jetWhite);tailcone.rotation.z=Math.PI/2;tailcone.position.x=-1.6;airplane.add(tailcone);
+const wingShape=new THREE.Shape();wingShape.moveTo(.55,-.2);wingShape.lineTo(-.55,-1.9);wingShape.lineTo(-.90,-1.9);wingShape.lineTo(-.55,-.12);wingShape.lineTo(-.55,.12);wingShape.lineTo(-.90,1.9);wingShape.lineTo(-.55,1.9);wingShape.lineTo(.55,.2);wingShape.closePath();
+const wingGeometry=new THREE.ShapeGeometry(wingShape); // shape XY: rotate into horizontal XZ plane
+wingGeometry.rotateX(-Math.PI/2);const wings=new THREE.Mesh(wingGeometry,new THREE.MeshStandardMaterial({color:0xd8f4ff,metalness:.52,roughness:.28,side:THREE.DoubleSide}));wings.rotation.y=Math.PI/2;wings.position.y=-.04;airplane.add(wings);
+const tailWing=new THREE.Mesh(new THREE.BoxGeometry(.7,.04,1.25),jetBlue);tailWing.position.x=-1.20;airplane.add(tailWing);
+const finShape=new THREE.Shape();finShape.moveTo(-1.6,.12);finShape.lineTo(-1.3,1.05);finShape.lineTo(-.92,.98);finShape.lineTo(-1.06,.1);finShape.closePath();
+const fin=new THREE.Mesh(new THREE.ShapeGeometry(finShape),new THREE.MeshStandardMaterial({color:0x37c5fa,side:THREE.DoubleSide,metalness:.25}));airplane.add(fin);
+for(const z of [-.75,.75]){const nacelle=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.62,12),jetBlue);nacelle.rotation.z=Math.PI/2;nacelle.position.set(-.22,-.20,z);airplane.add(nacelle)}
+const navigationLight=new THREE.PointLight(0x50dbff,1.7,6);navigationLight.position.set(.9,.15,0);airplane.add(navigationLight);
+// Embedded user-provided Airbus A320 GLB: no separate 3D asset download needed.
+const fallbackAircraftParts=[...airplane.children];
+const aircraftStatus=document.createElement('div');aircraftStatus.id='aircraftStatus';aircraftStatus.style.cssText='position:fixed;right:18px;top:65px;z-index:6;max-width:270px;padding:10px 13px;border:1px solid rgba(98,221,255,.3);background:rgba(4,15,31,.48);backdrop-filter:blur(12px);border-radius:10px;color:#caedff;font:12px/1.55 Segoe UI,Arial,sans-serif;display:none';
+aircraftStatus.innerHTML='<b>✈ AIRBUS A320 · USER MODEL</b><br><span id="aircraftState">Loading embedded 3D aircraft…</span><br><small>45,000 ft altitude · 75 km sector radius</small>';
+document.body.appendChild(aircraftStatus);
+function aircraftMsg(msg){document.getElementById('aircraftState').textContent=msg}
+function installA320(scene){
+ const wrapper=new THREE.Group(); wrapper.add(scene);
+ scene.updateMatrixWorld(true);
+ let box=new THREE.Box3().setFromObject(scene),dim=box.getSize(new THREE.Vector3());
+ if(!dim.length())throw Error('Aircraft model has no geometry');
+ if(dim.z>dim.x){scene.rotation.y=Math.PI/2;scene.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(scene);dim=box.getSize(new THREE.Vector3());}
+ const center=box.getCenter(new THREE.Vector3());scene.position.sub(center);
+ wrapper.scale.setScalar(5.2/Math.max(dim.x,.001));
+ scene.traverse(n=>{if(n.isMesh){n.frustumCulled=false;n.castShadow=false;}});
+ fallbackAircraftParts.forEach(part=>part.visible=false);
+ airplane.add(wrapper);
+ aircraftMsg('A320 3D model active · flying above coverage sectors');
+}
+// Transparent vertical signal column highlights airborne connectivity without claiming an RF model.
+const uplink=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,-2.4,0),V(0,0,0)]),new THREE.LineDashedMaterial({color:0x76f7ff,dashSize:.22,gapSize:.14,transparent:true,opacity:.8}));uplink.computeLineDistances();G.add(uplink);
+const altPts=[V(0,-3.2,0),V(0,6.8,0)];const altLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(altPts),new THREE.LineDashedMaterial({color:0xffbb62,dashSize:.25,gapSize:.15}));altLine.computeLineDistances();altLine.position.x=-14;G.add(altLine);
+const altLabel=document.createElement('div');altLabel.className='lbl on';altLabel.textContent='45,000 FT  ·  13.72 KM  ✈';document.body.appendChild(altLabel);
+// Altitude visualization: bright vertical ruler and aircraft-height horizon.
+const altitudeRuler=new THREE.Group(); G.add(altitudeRuler);
+const rulerMat=new THREE.LineBasicMaterial({color:0x65e6ff,transparent:true,opacity:.85});
+altitudeRuler.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,-3.16,0),V(0,6.8,0)]),rulerMat));
+for(let i=0;i<=5;i++){const y=-3.16+(9.96*i/5);altitudeRuler.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-.34,y,0),V(.34,y,0)]),rulerMat));}
+const altBubble=document.createElement('div');altBubble.id='altBubble';altBubble.innerHTML='<span>FLIGHT LEVEL</span><strong>FL 450</strong><b>45,000 FT</b><small>13.72 km above sea level · concept</small>';document.body.appendChild(altBubble);
+const lab120=document.createElement('div');lab120.className='lbl on';lab120.textContent='120 KM · SITE TO SITE';document.body.appendChild(lab120);
+// ---------- animated red A2G site beams and automatic handover ----------
+const stationX=[-12,0,12];
+const laserRed=new THREE.MeshBasicMaterial({color:0xff173e,transparent:true,opacity:.98,depthWrite:false});
+const laserCore=new THREE.MeshBasicMaterial({color:0xffe9ef,transparent:true,opacity:.97,depthWrite:false});
+const laserGlow=new THREE.MeshBasicMaterial({color:0xff244c,transparent:true,opacity:.17,depthWrite:false,blending:THREE.AdditiveBlending});
+const handoverGold=new THREE.MeshBasicMaterial({color:0xffad36,transparent:true,opacity:.88,depthWrite:false});
+function beamVisual(){
+ const group=new THREE.Group();G.add(group);
+ const createTube=(r,mat)=>{const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,1,12,1,true),mat.clone());group.add(mesh);return mesh};
+ const glow=createTube(.125,laserGlow),body=createTube(.036,laserRed),core=createTube(.011,laserCore);
+ const pulse=new THREE.Mesh(new THREE.SphereGeometry(.13,12,8),new THREE.MeshBasicMaterial({color:0xffe1e7,transparent:true,opacity:.98}));group.add(pulse);
+ return {group,glow,body,core,pulse};
+}
+const siteBeams=stationX.map(()=>beamVisual());
+const beamFrom=V(),beamTo=V(),beamDelta=V();
+function aimBeam(beam,idx,opacity,progress,gold){
+ const from=beamFrom.set(stationX[idx],.48,0),to=beamTo.set(airplane.position.x,airplane.position.y-.24,airplane.position.z);
+ beamDelta.subVectors(to,from);const dist=beamDelta.length();
+ for(const part of [beam.glow,beam.body,beam.core]){part.position.copy(from).addScaledVector(beamDelta,.5);part.scale.y=dist;part.quaternion.setFromUnitVectors(V(0,1,0),beamDelta.clone().normalize());}
+ beam.glow.material.opacity=.21*opacity;beam.body.material.opacity=.96*opacity;beam.core.material.opacity=.95*opacity;
+ beam.body.material.color.setHex(gold?0xffaa23:0xff1741);
+ beam.glow.material.color.setHex(gold?0xffc040:0xff244c);
+ beam.pulse.position.copy(from).addScaledVector(beamDelta,progress);beam.pulse.material.opacity=opacity;
+ beam.group.visible=opacity>.015;
+}
+const hoHud=document.createElement('div');hoHud.id='handoverHud';hoHud.setAttribute('aria-live','polite');hoHud.style.cssText='position:fixed;top:64px;left:clamp(14px,4vw,56px);min-width:205px;max-width:min(360px,80vw);padding:13px 17px;background:rgba(5,14,26,.45);border:1px solid rgba(255,70,90,.65);border-left:4px solid #ff274b;border-radius:10px;backdrop-filter:blur(10px);color:#fff;font:600 13px/1.7 Segoe UI,Arial,sans-serif;letter-spacing:.6px;pointer-events:none;display:none;box-shadow:0 0 35px rgba(230,24,53,.16)';document.body.appendChild(hoHud);
+function updateHandover(tm,inGround){
+ hoHud.style.display=inGround?'block':'none';
+ if(!inGround){siteBeams.forEach(b=>b.group.visible=false);return;}
+ const x=airplane.position.x,cut1=-6,cut2=6,zone=2.3;
+ let current=x<cut1?0:x<cut2?1:2;
+ let crossing=x>cut1-zone&&x<cut1+zone?0:(x>cut2-zone&&x<cut2+zone?1:-1);
+ // During make-before-break, the old red link and the new amber link coexist.
+ for(let i=0;i<siteBeams.length;i++){
+   let alpha=i===current?1:0,gold=false;
+   if(crossing>=0){const mix=THREE.MathUtils.smoothstep(x, [cut1,cut2][crossing]-zone,[cut1,cut2][crossing]+zone);
+     if(i===crossing){alpha=1-mix;gold=false;}
+     else if(i===crossing+1){alpha=mix;gold=true;}
+     else alpha=0;
+   }
+   aimBeam(siteBeams[i],i,alpha,(tm*.0005+i*.33)%1,gold);
+ }
+ if(crossing>=0){const a=String.fromCharCode(65+crossing),b=String.fromCharCode(66+crossing);
+  hoHud.innerHTML='<span style="color:#ffbd50">● HANDOVER IN PROGRESS</span><br>SITE '+a+' <span style="color:#ff5870">RED</span> &nbsp;→&nbsp; SITE '+b+' <span style="color:#ffbd50">AMBER</span><br><small style="color:#b9cee2">Dual RF-link visualization · illustrative overlapping handover</small>';
+ }else{hoHud.innerHTML='<span style="color:#ff4b62">● CONNECTED · RED RF BEAM</span><br>ACTIVE GSM SITE '+String.fromCharCode(65+current)+'<br><small style="color:#b9cee2">Aircraft ↔ ground site · simulated radio link</small>';}
+}
+// ---------- UI + camera ----------
+let cur=0,orb=0,drag=false,dx=0;
+const dots=document.getElementById('dots'),lbls=[].concat(...Object.values(items));
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.setAttribute('aria-label','Slide '+(i+1)+': '+s.t);b.onclick=()=>go(i);dots.appendChild(b)});
+function go(i){cur=(i+slides.length)%slides.length;orb=0;const s=slides[cur];t.textContent=s.t;d.textContent=s.d;spec.innerHTML=s.s.map(x=>'<div>'+x[0]+'<b>'+x[1]+'</b></div>').join('');[...dots.children].forEach((b,j)=>b.classList.toggle('on',j===cur))}
+prev.onclick=()=>go(cur-1);next.onclick=()=>go(cur+1);
+addEventListener('keydown',e=>{if(introActive){if(e.key==='ArrowRight')setIntroStage(stageAt(introHours)+1);if(e.key==='ArrowLeft')setIntroStage(stageAt(introHours)-1);if(e.key===' '){introPlaying=!introPlaying;e.preventDefault();}}else{if(e.key==='ArrowRight')go(cur+1);if(e.key==='ArrowLeft')go(cur-1)}});
+R.domElement.onpointerdown=e=>{drag=true;dx=e.clientX};addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(drag){orb+=(e.clientX-dx)*.006;dx=e.clientX}});
+function size(){R.setSize(innerWidth,innerHeight);C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix()}addEventListener('resize',size);size();go(0);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cl=V(0,0,0),ax=V(0,1,0),tv=V();C.position.set(8,5,40);
+function loop(tm){requestAnimationFrame(loop);const s=slides[cur],k=s.k,narrow=innerWidth<700?1.4:1;
+ if(introActive){if(lastIntroFrame&&introPlaying){const dt=Math.min(0.05,(tm-lastIntroFrame)/1000);if(introPrePhase){introPreSeconds+=dt;if(introPreSeconds>=11.4)introPrePhase=false;}else introHours=Math.min(36,introHours+dt*.48);if(introHours>=36)introPlaying=false;}lastIntroFrame=tm;updateIntro();}const inGround=!introActive&&(k==='ground'||k==='flight');aircraftStatus.style.display=inGround?'block':'none';A.visible=!inGround;G.visible=inGround;grid.visible=!inGround;const f=introActive?V(...IC().f):V(...s.f),o=introActive?V(...IC().o):V(...s.o).multiplyScalar(cur===0||cur===7?narrow:(narrow>1?1.3:1));
+ o.applyAxisAngle(ax,orb+(reduce?0:Math.sin(tm*.0003)*.16));
+ C.position.lerp(f.clone().add(o),.045);cl.lerp(f,.07);C.lookAt(cl);
+ const far=introActive||!k||k==='all';shellMats.forEach(m=>m.opacity+=((far?.16:.05)-m.opacity)*.06);lineMats.forEach(m=>{});
+ fl.position.copy(C.position).add(V(0,.3,0));document.getElementById("disclaimer").style.display=inGround?"block":"none";
+ const pu=.6+.4*Math.sin(tm*.006);
+ for(const key in items)items[key].forEach(it=>{if(inGround){it.el.style.display="none";return;}const on=introActive?((introHours>=7.5&&introHours<=23.5&&key==='ant')||(introHours>=7.5&&['wap','cs','rrh','bmu'].includes(key))):k===key;it.ol.visible=on;it.ol.material.opacity=pu;it.g.getWorldPosition(tv);tv.y+=key==='cp'?.15:.18;tv.project(C);
+  it.el.style.display=tv.z<1?'block':'none';it.el.style.transform='translate('+((tv.x*.5+.5)*innerWidth)+'px,'+((-tv.y*.5+.5)*innerHeight)+'px) translate(-50%,-100%)';it.el.classList.toggle('on',on||(!introActive&&(k==='all'||!k)))});
+ pulses.forEach((p,i)=>{p.s.position.copy(p.cv.getPoint((tm*.0004+p.o)%1))});
+ airplane.position.x=acX(tm);airplane.rotation.y=acR(tm);airplane.position.y=6.8+(reduce?0:Math.sin(tm*.0012)*.12);updateHandover(tm,inGround);altLine.position.x=airplane.position.x;altitudeRuler.position.x=airplane.position.x;altBubble.style.display=inGround?"block":"none";uplink.position.x=airplane.position.x;uplink.position.y=airplane.position.y-3.3;
+ for(const [el,pt] of [[altLabel,V(airplane.position.x,8.1,0)],[lab120,V(-6,-3.0,-2)]]){el.style.display=inGround?'block':'none';if(inGround){const q=pt.project(C);el.style.transform='translate('+((q.x*.5+.5)*innerWidth)+'px,'+((-q.y*.5+.5)*innerHeight)+'px) translate(-50%,-100%)'}}
+ try{postFrame(tm)}catch(e){console.error(e)}R.render(S,C)}
+
+// ==================== OPENING CHAPTER · MRO INSTALLATION TIMELINE ====================
+// Every time is an elapsed duration in hours; tasks in parallel do NOT double count.
+const stages=[
+ {start:0,end:0,title:'Pre-MRO · materials inspection',team:'LOGISTICS TEAM',count:2,focus:'all',text:'At least 3 days BEFORE aircraft induction. Verify material completeness and condition; this period is not included in the installation counter.',tags:['7 units: antenna · RRH · BMU+SCM · CS · 3 CWAP','Eclipse kit: 12 packages','10 fiber · 7 racks · 2 coax · screws','EASA Form 1 · BDL-16670']},
+ {start:0,end:0,title:'Aircraft taxi to MRO',team:'MRO / AIRCRAFT OPERATIONS',count:'—',focus:'all',text:'Aircraft enters the approved MRO work area. The installation clock starts at 00:00.',tags:['Aircraft arrival','T = 00:00']},
+ {start:0,end:1.5,title:'Quality acceptance inspection',team:'QUALITY TEAM',count:2,focus:'all',text:'Initial aircraft condition and access inspection by two quality personnel.',tags:['Inspection: 1 h 30 min','Counter → 01:30']},
+ {start:1.5,end:7.5,title:'Open cabin, cargo and avionics panels',team:'MRO OPERATIONS',count:8,focus:'all',text:'Remove relevant aircraft interior panels to expose the approved installation locations in the cabin, cargo and avionics areas.',tags:['Access preparation: 6 h','Counter → 07:30']},
+ {start:7.5,end:15.5,title:'Install racks and onboard hardware',team:'MRO OPERATIONS · CABIN · CARGO',count:7,focus:'all',text:'Mount racks in approved positions; fit 3 CWAP, cabin server, RRH and BMU. Four technicians work in cabin, two in cargo and one supervises.',tags:['4 cabin · 2 cargo · 1 supervisor','8 h planning case (range 6–8 h)','Counter → 15:30']},
+ {start:15.5,end:25.5,title:'Route cables: coax · CPRI · fiber · power',team:'MRO OPERATIONS · CABLING',count:8,focus:'all',text:'2 coax RRH to antenna, 1 RRH power, CPRI RRH to BMU and BMU to CS, 3 fibers CWAP to CS, power from the control panel to CS, CWAPs, BMU and RRH. All dressed in cable trays.',tags:['2 control panel · 2 avionics','2 CWAP · 2 RRH','300+ wire terminations','10 h planning case (range 8–10 h)','Counter → 25:30']},
+ {start:25.5,end:27.5,title:'Connectivity and wiring test',team:'MRO OPERATIONS · WIRING TEST',count:2,focus:'all',text:'Switch on from the control panel (CS + CWAP, BMU, RRH power), toggle reset, and verify continuity point to point.',tags:['Wiring check: 2 h','Counter → 27:30']},
+ {start:27.5,end:29,title:'Final quality inspection',team:'QUALITY TEAM',count:2,focus:'all',text:'Independent quality review of completed installation, routing and workmanship.',tags:['Inspection: 1 h 30 min','Counter → 29:00']},
+ {start:29,end:35,title:'Software upload and configuration',team:'SKYFIVE ENGINEER',count:1,focus:'bmu',text:'The Skyfive engineer connects a laptop to the cabin server by RJ48 cable and uploads and configures the connectivity software through the portal.',tags:['SkyFive engineer: 1','Software: 6 h','Counter → 35:00']},
+ {start:35,end:36,title:'E2E test · completion',team:'SKYFIVE ENGINEER',count:1,focus:'all',text:'Run the end-to-end (E2E) test from aircraft to ground and document the installation result.',tags:['E2E test: 1 h','Counter → 36:00','Installation simulation complete']}
+];
+let introActive=true,introPlaying=true,introHours=0,introPrePhase=true,lastIntroFrame=0,introPreSeconds=0;
+const intro=document.getElementById('installIntro');
+const durationFormat=v=>String(Math.floor(v)).padStart(2,'0')+':'+String(Math.round((v%1)*60)).padStart(2,'0');
+const stageAt=t=>{if(introPrePhase)return 0;if(t<=0)return 1;for(let i=2;i<stages.length;i++)if(t<=stages[i].end)return i;return stages.length-1};
+function updateIntro(){if(!introActive)return;const si=stageAt(introHours),st=stages[si];
+ document.getElementById('stageCode').textContent=String(si).padStart(2,'0')+' / 09';
+ document.getElementById('stageTitle').textContent=st.title;document.getElementById('stageInfo').textContent=st.text;
+ document.getElementById('stageTags').innerHTML=st.tags.map(x=>'<span>'+x+'</span>').join('');
+ document.getElementById('digitalClock').innerHTML=durationFormat(introHours).replace(':','<span>:</span>')+'<sup>HR</sup>';
+ document.getElementById('teamCount').textContent=st.count;document.getElementById('departmentName').textContent=st.team;
+ const antStart=7.5,antEnd=23.5,antProgress=Math.max(0,Math.min(1,(introHours-antStart)/(antEnd-antStart)));
+ document.getElementById('parallelStatus').textContent=introPrePhase?'PRE-MRO INSPECTION · ≥ 3 DAYS · EXCLUDED FROM CLOCK':introHours>=antStart&&introHours<antEnd?'PARALLEL ANTENNA DRILL + FIT + SEALING · '+Math.round(100*antProgress)+'% · 16 HR':introHours>=antEnd?'ANTENNA INSTALLATION & SEALING COMPLETE':'ANTENNA WORK STARTS AT 07:30 · PARALLEL 16 HR';
+ document.getElementById('installProgress').style.width=(introHours/36*100)+'%';
+ document.getElementById('introPlay').textContent=introPlaying?'❚❚ PAUSE':'▶ PLAY';
+ // Visual priority of aircraft hardware during stage change
+ for(const [key,arr] of Object.entries(items))for(const it of arr){const relevant=(si===4 && ['wap','cs','rrh','bmu'].includes(key))||(si===5&&['cp','wap','rrh','bmu','cs'].includes(key))||(si>=8&&['bmu','rrh','ant'].includes(key))||(introHours>=7.5&&introHours<=23.5&&key==='ant');it.ol.visible=relevant;it.ol.material.color.setHex(relevant?0xffdd55:0xff4d4d);}
+}
+function setIntroStage(n){n=Math.max(0,Math.min(stages.length-1,n));introPrePhase=n===0;introHours=stages[n].start;if(n===stages.length-1)introHours=35.001;updateIntro()}
+function endIntro(){introActive=false;intro.style.display='none';document.getElementById('nav').style.display='flex';document.getElementById('card').style.display='block';document.getElementById('brand').style.display='block';go(0)}
+document.getElementById('introPlay').onclick=()=>{introPlaying=!introPlaying;updateIntro()};
+document.getElementById('introBack').onclick=()=>{setIntroStage(stageAt(introHours)-1)};
+document.getElementById('introNext').onclick=()=>{setIntroStage(stageAt(introHours)+1)};
+document.getElementById('introSkip').onclick=endIntro;
+document.getElementById('nav').style.display='none';document.getElementById('card').style.display='none';document.getElementById('brand').style.display='none';
+const markerHolder=document.getElementById('introMarkers');for(const st of stages.slice(2,-1)){const marker=document.createElement('i');marker.style.left=(st.end/36*100)+'%';markerHolder.appendChild(marker)}
+updateIntro();
+
+// ================= PATCH: immersive installation simulation + new jet + coverage =================
+const cl01=v=>Math.max(0,Math.min(1,v)),seg=(h,a,b)=>cl01((h-a)/(b-a)),ez=t=>t*t*(3-2*t),LL=(a,b,t)=>a+(b-a)*t;
+function aimC(m,f,t){const d=t.clone().sub(f);m.position.copy(f).addScaledVector(d,.5);m.scale.y=d.length();m.quaternion.setFromUnitVectors(V(0,1,0),d.normalize())}
+function mkLbl(t,on){const e=document.createElement('div');e.className='lbl'+(on?' on':'');e.textContent=t;document.body.appendChild(e);return e}
+function projL(el,pt,show){if(!show){el.style.display='none';return}const q=pt.clone().project(C);if(q.z>1){el.style.display='none';return}el.style.display='block';el.style.transform='translate('+((q.x*.5+.5)*innerWidth)+'px,'+((-q.y*.5+.5)*innerHeight)+'px) translate(-50%,-100%)'}
+const glowM=c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.2,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+
+// ---------- NEW JET (procedural A320-style, no airline marks) ----------
+function buildJet(){
+ fallbackAircraftParts.forEach(p=>p.visible=false);
+ const g=new THREE.Group(),W=new THREE.MeshStandardMaterial({color:0xf4f8fc,metalness:.25,roughness:.22,emissive:0x0c2233}),
+ Bl=new THREE.MeshStandardMaterial({color:0x2a9ad6,metalness:.6,roughness:.3,emissive:0x06324f}),
+ Dk=new THREE.MeshStandardMaterial({color:0x0c1219,metalness:.7,roughness:.35}),Gy=new THREE.MeshStandardMaterial({color:0xaab6c4,metalness:.8,roughness:.3});
+ const pts=[];for(let i=0;i<=60;i++){const u=i/60;let r=.2;
+  if(u>.9)r=.2*Math.sqrt(Math.max(0,1-Math.pow((u-.9)/.1,2)))+.004;else if(u<.24)r=.2*(1-.86*Math.pow((.24-u)/.24,1.7))+.01;
+  pts.push(new THREE.Vector2(r,-2.6+5.2*u))}
+ const fg=new THREE.LatheGeometry(pts,40);fg.rotateZ(-Math.PI/2);g.add(new THREE.Mesh(fg,W));
+ const bg=new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p.x*1.012,p.y)),40,Math.PI*.62,Math.PI*.76);bg.rotateZ(-Math.PI/2);g.add(new THREE.Mesh(bg,Bl));
+ const wb=new THREE.Mesh(new THREE.BoxGeometry(3.3,.026,.404),Dk);wb.position.set(.1,.06,0);g.add(wb);
+ const cw=new THREE.Mesh(new THREE.BoxGeometry(.22,.06,.38),Dk);cw.position.set(2.18,.1,0);g.add(cw);
+ const wing=new THREE.Group(),ws=new THREE.Shape();ws.moveTo(.5,.17);ws.lineTo(-.55,1.85);ws.lineTo(-.82,1.85);ws.lineTo(-.55,.17);ws.closePath();
+ const wgm=new THREE.ExtrudeGeometry(ws,{depth:.03,bevelEnabled:false});wgm.rotateX(-Math.PI/2);const wm=new THREE.Mesh(wgm,W);wm.rotation.x=.06;wm.position.y=-.1;wing.add(wm);
+ const sk=new THREE.Mesh(new THREE.BoxGeometry(.2,.012,.26),Bl);sk.rotation.x=1.25;sk.position.set(-.7,.02,1.86);sk.scale.set(1,1,1);wing.add(sk);
+ const tip=new THREE.Mesh(new THREE.SphereGeometry(.03,10,8),new THREE.MeshBasicMaterial({color:0xff2a3a}));tip.position.set(-.7,-.0,1.88);wing.add(tip);
+ const en=new THREE.Group();const eb=new THREE.Mesh(new THREE.CylinderGeometry(.115,.1,.52,24,1,true),Gy);eb.rotation.z=Math.PI/2;en.add(eb);
+ const lip=new THREE.Mesh(new THREE.TorusGeometry(.115,.014,8,24),W);lip.rotation.y=Math.PI/2;lip.position.x=.26;en.add(lip);
+ const fan=new THREE.Mesh(new THREE.CircleGeometry(.105,24),Dk);fan.rotation.y=Math.PI/2;fan.position.x=.255;en.add(fan);
+ const pyl=new THREE.Mesh(new THREE.BoxGeometry(.4,.1,.03),W);pyl.position.set(0,.08,0);en.add(pyl);en.position.set(.52,-.26,.64);wing.add(en);
+ g.add(wing);const w2=wing.clone();w2.scale.z=-1;g.add(w2);
+ const hs=new THREE.Shape();hs.moveTo(-1.95,.0);hs.lineTo(-2.4,.78);hs.lineTo(-2.58,.78);hs.lineTo(-2.5,0);hs.closePath();
+ const hg=new THREE.ExtrudeGeometry(hs,{depth:.02,bevelEnabled:false});hg.rotateX(-Math.PI/2);const h1=new THREE.Mesh(hg,W);h1.position.y=.05;g.add(h1);const h2=h1.clone();h2.scale.z=-1;g.add(h2);
+ const fs=new THREE.Shape();fs.moveTo(-1.55,.15);fs.lineTo(-2.25,1.0);fs.lineTo(-2.62,1.0);fs.lineTo(-2.6,.12);fs.closePath();
+ const fgm=new THREE.ExtrudeGeometry(fs,{depth:.03,bevelEnabled:false});fgm.translate(0,0,-.015);g.add(new THREE.Mesh(fgm,W));
+ const ft=new THREE.Mesh(new THREE.BoxGeometry(.4,.2,.032),Bl);ft.position.set(-2.4,.9,0);g.add(ft);
+ const st=new THREE.Mesh(new THREE.SphereGeometry(.025,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));st.position.set(-2.62,.2,0);g.add(st);
+ const halo=new THREE.Mesh(new THREE.SphereGeometry(.34,16,12),glowM(0x35d8ff));halo.scale.set(5,1.4,3.6);halo.material.opacity=.07;g.add(halo);
+ g.scale.setScalar(1.08);airplane.add(g);aircraftMsg('Airbus A320-style 3D model · flying at FL450');
+}
+try{buildJet()}catch(e){console.error(e)}
+
+// ---------- GROUND SCENE: 120 km spacing, 75 km sectors, 45,000 ft ----------
+const gl=[];const gxs=[-12,0,12];
+function dimLine(a,b,col){G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color:col})));for(const p of[a,b])G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p.clone().add(V(0,0,-.35)),p.clone().add(V(0,0,.35))]),new THREE.LineBasicMaterial({color:col})))}
+for(let i=0;i<2;i++){dimLine(V(gxs[i],-3.04,-4.6),V(gxs[i+1],-3.04,-4.6),0xffc15a);gl.push([mkLbl('◄ 120 KM · SITE TO SITE ►',true),V((gxs[i]+gxs[i+1])/2,-3,-4.6)])}
+dimLine(V(0,-3.04,5.2),V(7.5,-3.04,5.2),0x5cf0ff);gl.push([mkLbl('75 KM · SECTOR RADIUS',true),V(3.75,-3,5.2)]);
+const flightPl=new THREE.Mesh(new THREE.PlaneGeometry(52,9),new THREE.MeshBasicMaterial({color:0x35d8ff,transparent:true,opacity:.045,side:THREE.DoubleSide,depthWrite:false}));flightPl.rotation.x=-Math.PI/2;flightPl.position.y=6.8;G.add(flightPl);
+const fe=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(52,9)),new THREE.LineBasicMaterial({color:0x6fe8ff,transparent:true,opacity:.6}));fe.rotation.x=-Math.PI/2;fe.position.y=6.8;G.add(fe);
+for(let i=0;i<=9;i++){const ft=i*5000,y=-3.16+9.96*ft/45000;const hot=ft%15000===0||ft===45000;G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-24,y,-4.6),V(-23.2,y,-4.6)]),new THREE.LineBasicMaterial({color:0xffbb62})));if(hot)gl.push([mkLbl(ft.toLocaleString()+' FT',ft===45000),V(-24.8,y+.15,-4.6)])}
+G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-24,-3.16,-4.6),V(-24,6.8,-4.6)]),new THREE.LineBasicMaterial({color:0xffbb62})));
+const alt3=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1,8),glowM(0xffc15a));alt3.material.opacity=.5;G.add(alt3);
+const lobes=[];gxs.forEach(x=>[-1,1].forEach(d=>{const c=new THREE.Mesh(new THREE.ConeGeometry(1,1,28,1,true),glowM(0x35d8ff));c.material.opacity=.05;G.add(c);const top=V(x,.5,0),to=V(x+d*7.5,6.8,0),dv=to.clone().sub(top),len=dv.length();
+ c.geometry.translate(0,-.5,0);c.position.copy(top);c.scale.set(len*.26,len,len*.26);c.quaternion.setFromUnitVectors(V(0,-1,0),dv.normalize());lobes.push(c)}));
+const rings=[];gxs.forEach(x=>{for(let k=0;k<3;k++){const r=new THREE.Mesh(new THREE.RingGeometry(.97,1,72),new THREE.MeshBasicMaterial({color:0x37e0ff,transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));r.rotation.x=-Math.PI/2;r.position.set(x,-3.08,0);G.add(r);rings.push([r,k/3])}});
+// ---------- INSTALLATION SIMULATION ----------
+const P=new THREE.Group();S.add(P);
+const bx=(w,h,d,c,x,y,z,gp)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:c,roughness:.5,metalness:.3,emissive:c,emissiveIntensity:.12}));m.position.set(x,y,z);(gp||P).add(m);return m};
+// ===== PRE-MRO inspection: real device models + installation kit + PDF checklist =====
+const KITS=[['210-02056-01A','ANT DOUBLER'],['230-02044-01A','ANT INSTALL'],['210-02058-01A','BMU/RRH BRKT'],['210-02059-01A','CWAP BRKT'],['210-02060-01B','SERVER TRAY'],['230-02045-01A','BMU EQUIP'],['230-02046-01A','RRH EQUIP'],['230-02047-01A','CWAP EQUIP'],['230-02041-01A','MAINT PORT'],['220-02019-01B','HARNESS · CB'],['220-02020-01B','HARNESS · A/C'],['220-02021-02A','HARNESS · SHELF']];
+const preLbls=[],preT=[],crL=preLbls;
+const tbl=bx(9.8,.1,3.4,0x28384a,4.6,-4.4,9.5);tbl.material.transparent=true;tbl.material.opacity=.85;[[.1,8],[9.1,8],[.1,11],[9.1,11]].forEach(a=>bx(.1,.55,.1,0x28384a,a[0],-4.72,a[1]));
+function putUnit(src,x,z,s){const w=new THREE.Group(),c=src.clone(true);c.traverse(o=>o.visible=true);c.position.set(0,0,0);c.rotation.set(0,0,0);c.scale.setScalar(s);w.add(c);const b=new THREE.Box3().setFromObject(w);c.position.y=-b.min.y;w.position.set(x,-4.35,z);P.add(w);return w}
+const uAnt=putUnit(items.ant[0].g,.8,8.7,2.3),uRrh=putUnit(items.rrh[0].g,2.1,8.7,2.3),uBmu=putUnit(items.bmu[0].g,3.5,8.7,2.3),uCs=putUnit(items.cs[0].g,5.2,8.7,2.3),uCw=items.wap.map((w,i)=>putUnit(w.g,6.6+i*.85,8.7,2.3));
+const uScm=new THREE.Group();bx(.32,.04,.22,0x1d2530,0,.02,0,uScm);bx(.12,.012,.12,0xd4af37,.03,.046,0,uScm);bx(.06,.01,.08,0xe8e8e8,-.1,.046,.04,uScm);uScm.position.set(3.5,-4.35,9.55);P.add(uScm);
+bx(8.6,.06,1.5,0x34465a,4.6,-4.32,10.35);
+const kG=()=>{const g=new THREE.Group();P.add(g);return g},fibG=kG(),rkG=kG(),cxG=kG(),hwG=kG(),tm0=(c,e)=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:e||.25,roughness:.5});
+for(let i=0;i<10;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.17,.035,10,24),tm0(0x3dff7a));t.rotation.x=Math.PI/2;t.position.set(1+(i%5)*.36,-4.23+Math.floor(i/5)*.07,10.1+Math.floor(i/5)*.5);fibG.add(t)}
+for(let i=0;i<7;i++)for(const [w,h,dd,px,py] of[[.4,.03,.2,0,.015],[.03,.22,.2,-.185,.11]])bx(w,h,dd,0xaab6c4,2.95+i*.23+px,-4.29+py,10.35,rkG);
+for(let i=0;i<2;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.22,.03,10,28),tm0(0x37d4ff));t.rotation.x=Math.PI/2;t.position.set(5.2+i*.55,-4.24,10.35);cxG.add(t)}
+for(let i=0;i<24;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.06,8),tm0(0xd4af37,.15));c.position.set(6.5+(i%8)*.12,-4.26,10.0+Math.floor(i/8)*.12);hwG.add(c)}
+for(let i=0;i<10;i++)bx(.1,.06,.1,[0xff6a7a,0xffb02e,0x9b8bff,0x6ff2ff,0xe8e8e8][i%5],6.6+(i%5)*.3,-4.26,10.75+Math.floor(i/5)*.17,hwG);
+function mkTarget(name,objs,t){const b=new THREE.Box3();objs.forEach(o=>b.expandByObject(o));b.expandByScalar(.08);const hp=new THREE.Box3Helper(b,0x3aa8d8);P.add(hp);const el=mkLbl(name,true);preLbls.push(el);preT.push({name,hp,el,t,top:V((b.min.x+b.max.x)/2,b.max.y+.15,(b.min.z+b.max.z)/2)})}
+[['ANTENNA',[uAnt]],['RRH',[uRrh]],['BMU + SCM',[uBmu,uScm]],['CABIN SERVER',[uCs]],['3 × CWAP',uCw],['10 × FIBER',[fibG]],['7 × RACKS',[rkG]],['2 × COAX',[cxG]],['HARDWARE',[hwG]]].forEach((a,i)=>mkTarget(a[0],a[1],1+i*.85));
+const kitEl=document.createElement('div');kitEl.id='kitList';kitEl.innerHTML='<div class="hd">INSTALLATION KIT · 12 PACKS</div>'+KITS.map(k=>'<div class="kr"><b>✓</b>'+k[1]+'<i>'+k[0]+'</i></div>').join('');document.body.appendChild(kitEl);const kitRows=[...kitEl.querySelectorAll('.kr')];
+function preFrame(tm,pre){const ps=introPreSeconds;kitEl.style.display=pre?'block':'none';{const cb=document.querySelector('.intro-clock').getBoundingClientRect();kitEl.style.top=(cb.bottom+10)+'px';kitEl.style.right=(innerWidth-cb.right)+'px';kitEl.style.width=Math.max(cb.width,250)+'px'}if(!pre){preLbls.forEach(e=>e.style.display='none');return''}
+ let okT=0;preT.forEach(t=>{const st=ps<t.t?0:ps<t.t+.75?1:2;if(st===2)okT++;t.hp.material.color.setHex(st===0?0x3aa8d8:st===1?0xffb02e:0x3dff7a);t.el.textContent=(st===2?'✓ ':'')+t.name;t.el.style.borderColor=st===2?'#3dff7a':st===1?'#ffb02e':'#5fd3ff66';projL(t.el,t.top,true)});
+ let okK=0;kitRows.forEach((r,j)=>{const on=ps>=.8+j*.66;if(on)okK++;r.classList.toggle('ok',on)});
+ return'MATERIAL INSPECTION · '+okT+'/'+preT.length+' ITEMS · '+okK+'/12 KITS VERIFIED'+(okK===12?' · ALL DELIVERED ✓':'')}
+const racks=new THREE.Group();[[9.2],[10.6],[12]].forEach(a=>bx(.9,.04,.7,0x8995a3,a[0],-1.36,.1,racks));[[8.6],[12.4]].forEach(a=>bx(.04,.3,.7,0x8995a3,a[0],-1.2,.1,racks));A.add(racks);
+const panels=[];const pm=new THREE.MeshStandardMaterial({color:0x7b8a9c,transparent:true,opacity:.85,roughness:.6});
+for(let i=0;i<18;i++){const k=i%3,j=Math.floor(i/3);const m=new THREE.Mesh(new THREE.BoxGeometry(2,.05,1.7),pm.clone());const x=-9.5+j*3.6;
+ if(k===0)m.position.set(x,1.78,0);else if(k===1){m.position.set(x,-1.5,0)}else{m.position.set(x,.2,1.86);m.rotation.x=Math.PI/2;m.scale.set(1,1,.9)}A.add(m);panels.push({m,k,y:m.position.y,z:m.position.z})}
+const hwAt={rrh:8.6,bmu:9.6,cs:10.6,wap:12,cp:16.2,ant:23.5};
+const guy=(c)=>{const g=new THREE.Group();const b=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.42,12),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.25}));b.position.y=.21;g.add(b);const h=new THREE.Mesh(new THREE.SphereGeometry(.075,12,10),new THREE.MeshStandardMaterial({color:0xffd9b0}));h.position.y=.5;g.add(h);const hat=new THREE.Mesh(new THREE.SphereGeometry(.082,12,6,0,6.3,0,1.5),new THREE.MeshStandardMaterial({color:0xffd23a,emissive:0xffd23a,emissiveIntensity:.3}));hat.position.y=.52;g.add(hat);return g};
+const men=[];for(let i=0;i<8;i++){const m=guy([0x35d4ff,0xffb02e,0x3dff7a,0xff6a7a,0xb98bff,0x35d4ff,0xffb02e,0x3dff7a][i]);men.push(m)}
+const lg=[guy(0xffb02e),guy(0xffb02e)];lg.forEach((m,i)=>{m.position.set(3+i*2.4,-4.95,10.3)});
+const cab=(x,z)=>[x,-.7,z],crg=(x,z)=>[x,-1.55,z];
+const crew={2:[cab(13,.5),cab(5,-.5)],3:[cab(10,.6),cab(2,-.6),crg(7,.9),crg(4,-.8)],4:[cab(9,.6),cab(2,-.6),cab(-6,.5),cab(-9,-.6),crg(8,.9),crg(5.5,-.8),cab(12.5,0)],
+ 5:[cab(13,-1.1),cab(13,-.4),crg(10,.5),crg(11,-.4),cab(9,.6),cab(-1,-.6),crg(9,.7),crg(10,.3)],6:[cab(13,-1.1),crg(10.5,.5)],7:[cab(13,.5),cab(5,-.5)],8:[crg(10.5,.7)],9:[cab(-1,.6)]};
+// antenna work
+const drill=new THREE.Mesh(new THREE.ConeGeometry(.07,.25,10),new THREE.MeshStandardMaterial({color:0xffb02e,emissive:0xff8800,emissiveIntensity:.8}));drill.position.set(7,-2.15,0);drill.rotation.x=Math.PI;A.add(drill);
+const sparks=[];for(let i=0;i<8;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.018,6,6),new THREE.MeshBasicMaterial({color:0xffd070}));A.add(s);sparks.push(s)}
+const hole=new THREE.Mesh(new THREE.CircleGeometry(.2,32),new THREE.MeshBasicMaterial({color:0x05080c,side:THREE.DoubleSide}));hole.rotation.x=-Math.PI/2;hole.scale.y=.62;hole.position.set(7,-1.965,0);hole.visible=false;A.add(hole);
+const seal=new THREE.Mesh(new THREE.RingGeometry(.23,.28,48,1,0,.01),new THREE.MeshBasicMaterial({color:0xffe08a,side:THREE.DoubleSide}));seal.rotation.x=-Math.PI/2;seal.position.set(7,-1.96,0);seal.scale.z=.62;A.add(seal);let lastSeal=-1;
+// cable trays + straight, aligned, rounded-corner cable routes (aviation style)
+const trayG=new THREE.Group();A.add(trayG);const trayM=new THREE.MeshStandardMaterial({color:0x9fb1c4,transparent:true,opacity:0,metalness:.7,roughness:.35,side:THREE.DoubleSide,depthWrite:false});const edgeM=new THREE.LineBasicMaterial({color:0xcfe9ff,transparent:true,opacity:0});
+function tray(w,h,d,x,y,z){const g=new THREE.Group(),b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),trayM);g.add(b);g.add(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),edgeM));g.position.set(x,y,z);trayG.add(g)}
+tray(6.9,.07,.5,10.05,-1.4,.15);tray(.5,.07,1.9,13.2,-1.4,-.85);tray(.4,3.2,.2,13.2,.18,-1.78);
+tray(25.4,.07,.5,.9,1.76,.1);tray(.4,.07,1.95,13.1,1.76,-.8);
+tray(.5,3.2,.22,12.2,.2,.3);
+function rpath(pts,r){const V3=pts.map(p=>V(...p)),cp=new THREE.CurvePath();let prev=V3[0].clone();
+ for(let i=1;i<V3.length-1;i++){const a=V3[i-1],b=V3[i],c=V3[i+1],da=a.clone().sub(b),dc=c.clone().sub(b),rr=Math.min(r,da.length()/2,dc.length()/2);da.normalize();dc.normalize();
+  const p1=b.clone().addScaledVector(da,rr),p2=b.clone().addScaledVector(dc,rr);if(prev.distanceTo(p1)>1e-6)cp.add(new THREE.LineCurve3(prev,p1));cp.add(new THREE.QuadraticBezierCurve3(p1,b.clone(),p2));prev=p2}
+ const e=V3[V3.length-1];if(prev.distanceTo(e)>1e-6)cp.add(new THREE.LineCurve3(prev,e));return cp}
+const tubeM=(pts,c,r)=>{const path=rpath(pts,.07),len=path.getLength(),sg=Math.max(80,Math.min(600,Math.ceil(len*18)));
+ const m=new THREE.Mesh(new THREE.TubeGeometry(path,sg,r,6,false),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.45,roughness:.4}));m.userData.c=c;m.userData.r=r;m.userData.curve=path;A.add(m);return m};
+const dedic=[];const wires=[];
+const cabL=[[mkLbl('2 × COAX · RRH → ANTENNA',true),V(7.8,-1.1,.5),15.5],[mkLbl('CPRI · RRH → BMU → CS',true),V(10,-.8,.3),16.5],[mkLbl('CABLE TRAY · SHELF',true),V(11,-1.95,.6),17],[mkLbl('RISER TRAY',true),V(12.2,2.0,.3),18],[mkLbl('OVERHEAD TRAY · 3 FIBERS CWAP → CS + POWER',true),V(-3,2.2,0),19],[mkLbl('CP SWITCHES · RESET · CS+CWAP · BMU · RRH',true),V(13.2,.45,-1.7),25.8]];
+const addC=(n,c,pts,r)=>{const m=tubeM(pts,c,r||.011);m.userData.n=n;wires.push(m)};
+const Y=-1.385,WX=[9,-1,-11];
+const coax=(z,s)=>[[8.86,-1.3,.2+s],[8.7,-1.3,.2+s],[8.7,Y,.2+s],[8.7,Y,z],[7,Y,z],[7,Y,.03*s/Math.abs(s||1)*(s?1:1)],[7,-1.92,.03*(s?-1:1)]];
+addC('COAX 1 · RRH → ANTENNA',0x37d4ff,[[8.86,-1.3,.2],[8.7,-1.3,.2],[8.7,Y,.2],[8.7,Y,.36],[7,Y,.36],[7,Y,.03],[7,-1.92,.03]],.022);
+addC('COAX 2 · RRH → ANTENNA',0x6fe8ff,[[8.86,-1.3,.17],[8.7,-1.3,.17],[8.7,Y,.17],[8.7,Y,.42],[7.05,Y,.42],[7.05,Y,-.03],[7.05,-1.92,-.03]],.022);
+addC('POWER · CP → RRH',0xff4d4d,[[13.32,.1,-1.78],[13.32,-1.395,-1.78],[13.32,-1.395,-.1],[8.95,-1.395,-.1],[8.95,-1.395,.14],[8.95,-1.325,.14]]);
+addC('CPRI · RRH → BMU',0xffc21a,[[9.17,-1.3,.2],[9.25,-1.3,.2],[9.25,Y,.2],[9.25,Y,.3],[9.78,Y,.3],[9.78,Y,.2],[9.78,-1.3,.2],[9.84,-1.3,.2]],.016);
+addC('CPRI · BMU → CS',0xff9a1f,[[10.17,-1.3,.2],[10.25,-1.3,.2],[10.25,Y,.2],[10.25,Y,.26],[11.05,Y,.26],[11.05,Y,.2],[11.05,-1.22,.2],[11.15,-1.22,.2]],.016);
+WX.forEach((tx,k)=>{const zl=(k-1)*.08,dx=(k-1)*.06,yk=1.74-k*.02,yb=-.95-k*.03,xk=11.22+k*.08;
+ addC('FIBER · CWAP '+(k+1)+' → CS',0x3dff7a,[[tx,1.645,zl],[tx,yk,zl],[12.2+dx,yk,zl],[12.2+dx,yk,.3],[12.2+dx,yb,.3],[xk,yb,.3],[xk,yb,.14],[xk,-1.125,.14]],.012)});
+addC('POWER · CP → BMU',0xff4d4d,[[13.24,.1,-1.78],[13.24,-1.395,-1.78],[13.24,-1.395,-.05],[10,-1.395,-.05],[10,-1.395,.14],[10,-1.325,.14]]);
+addC('POWER · CP → CS',0xff4d4d,[[13.16,.1,-1.78],[13.16,-1.395,-1.78],[13.16,-1.395,.05],[11.4,-1.395,.05],[11.4,-1.325,.05]]);
+WX.forEach((tx,k)=>{const x0=13.06+k*.03,zl=.2+k*.04;addC('POWER · CP → CWAP '+(k+1),0xff4d4d,[[x0,.1,-1.78],[x0,1.765,-1.78],[x0,1.765,zl],[tx,1.765,zl],[tx,1.66,zl],[tx,1.66,.07]],.009)});
+// ===== INSTALLATION QUALITY: connectors, cable ties, brackets, bolts, bonding straps =====
+const MSil=new THREE.MeshStandardMaterial({color:0xcfd6de,metalness:.9,roughness:.25}),MGold=new THREE.MeshStandardMaterial({color:0xd4af37,metalness:.8,roughness:.3}),MSteel=new THREE.MeshStandardMaterial({color:0x8d99a8,metalness:.7,roughness:.4});
+function makeConn(w,kind,k){const cv=w.userData.curve,r=w.userData.r||.01,p=cv.getPoint(k),t=cv.getTangent(k);if(!k)t.negate();const g=new THREE.Group(),up=V(0,1,0);
+ const cyl=(rad,len,mat,off)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,len,12),mat);m.position.y=off;g.add(m);return m};
+ const bootM=new THREE.MeshStandardMaterial({color:w.userData.c,emissive:w.userData.c,emissiveIntensity:.3,roughness:.6});
+ if(kind==='coax'){cyl(r*1.55,.07,MSil,.035);cyl(r*1.9,.025,MSil,.075);cyl(r*1.15,.03,MSil,.12);cyl(r*1.4,.06,bootM,-.03)}
+ else if(kind==='fiber'){cyl(r*1.7,.05,new THREE.MeshStandardMaterial({color:0xe9f2fa}),.025);cyl(r*.9,.03,MSil,.07);cyl(r*1.3,.07,bootM,-.035)}
+ else if(kind==='power'){cyl(r*1.8,.04,bootM,.02);const lug=new THREE.Mesh(new THREE.BoxGeometry(r*5,.008,r*4),MGold);lug.position.y=.06;g.add(lug);cyl(r*1.2,.05,bootM,-.025)}
+ else{const b=new THREE.Mesh(new THREE.BoxGeometry(.05,.07,.04),new THREE.MeshStandardMaterial({color:0xdfe8f2,transparent:true,opacity:.8}));b.position.y=.035;g.add(b);cyl(r*1.4,.05,bootM,-.025)}
+ g.position.copy(p);g.quaternion.setFromUnitVectors(up,t);A.add(g);return g}
+function kindOf(n){return/COAX/.test(n)?'coax':/CPRI|FIBER/.test(n)?'fiber':/POWER/.test(n)?'power':'rj'}
+wires.forEach(w=>{const kd=kindOf(w.userData.n||'');w.userData.cn=[makeConn(w,kd,0),makeConn(w,kd,1)];w.userData.cn.forEach(c=>c.visible=false)});
+// cable ties (nylon wraps) along tray runs
+{const sp=[];wires.forEach(w=>{const cv=w.userData.curve,L=cv.getLength(),n=Math.floor(L/.9);for(let i=1;i<n;i++){const u=i/n;sp.push([cv.getPointAt(u),cv.getTangentAt(u),(w.userData.r||.01)])}});
+ const tm2=new THREE.InstancedMesh(new THREE.TorusGeometry(.03,.006,6,14),new THREE.MeshStandardMaterial({color:0xf0f4f8,roughness:.7}),sp.length),d2=new THREE.Object3D();
+ sp.forEach((s,i)=>{d2.position.copy(s[0]);d2.quaternion.setFromUnitVectors(V(0,0,1),s[1]);const k=(s[2]+.011)/.03;d2.scale.set(k,k,1);d2.updateMatrix();tm2.setMatrixAt(i,d2.matrix)});A.add(tm2);window.__ties=tm2;tm2.visible=false}
+// hardware dressing: mounting plates, bolts, straps, ceiling brackets, antenna gasket
+function bolt(g,x,y,z){const b=new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.022,6),MSil);b.position.set(x,y,z);g.add(b);const wsh=new THREE.Mesh(new THREE.CylinderGeometry(.017,.017,.004,12),MSil);wsh.position.set(x,y-.011,z);g.add(wsh)}
+function dress(it,kind){const g=it.g,b=new THREE.Box3().setFromObject(g),sz=b.getSize(V(0,0,0)),c=b.getCenter(V(0,0,0)).sub(g.position),lo=b.min.y-g.position.y,hi=b.max.y-g.position.y;
+ if(kind==='floor'){const pl=new THREE.Mesh(new THREE.BoxGeometry(sz.x+.08,.012,sz.z+.1),MSteel);pl.position.set(c.x,lo-.006,c.z);g.add(pl);for(const sx of[-1,1])for(const sz2 of[-1,1])bolt(g,c.x+sx*(sz.x/2+.03),lo+.006,c.z+sz2*(sz.z/2+.04));
+  const st=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(c.x-sz.x/2,lo+sz.y*.25,c.z+sz.z/2),V(c.x-sz.x/2-.05,lo+.03,c.z+sz.z/2+.03),V(c.x-sz.x/2-.09,lo,c.z+sz.z/2+.04)]),12,.005,5),new THREE.MeshStandardMaterial({color:0xb6d62a,emissive:0x5a7010,emissiveIntensity:.4}));g.add(st);
+  const pc=new THREE.Mesh(new THREE.BoxGeometry(.08,.03,.004),new THREE.MeshStandardMaterial({color:0xf2f6fa}));pc.position.set(c.x+sz.x*.2,lo+sz.y*.55,b.max.z-g.position.z+.003);g.add(pc)}
+ else if(kind==='ceil'){const pl=new THREE.Mesh(new THREE.BoxGeometry(sz.x+.06,.01,sz.z+.06),MSteel);pl.position.set(c.x,hi+.006,c.z);g.add(pl);for(const sx of[-1,1])for(const sz2 of[-1,1])bolt(g,c.x+sx*(sz.x/2+.02),hi+.012,c.z+sz2*(sz.z/2+.02))}
+ else if(kind==='ant'){for(let i=0;i<6;i++){const a=i/6*6.283,R2=Math.max(sz.x,sz.z)*.5+.06;bolt(g,c.x+Math.cos(a)*R2,lo+.02,c.z+Math.sin(a)*R2)}}}
+['rrh','bmu','cs'].forEach(k=>dress(items[k][0],'floor'));items.wap.forEach(w=>dress(w,'ceil'));dress(items.ant[0],'ant');
+
+// existing pulse dots now follow the new aligned cables
+pulses.forEach((p,i)=>{p.cv=wires[i*2%wires.length].userData.curve;p.s.visible=false});
+cables.forEach(c=>c.visible=false);
+const cpS=[];[-.12,-.04,.04,.12].forEach((dx,i)=>{const g=new THREE.Group();g.position.set(13.2+dx,.1,-1.82);const b=new THREE.Mesh(new THREE.BoxGeometry(.05,.035,.012),new THREE.MeshStandardMaterial({color:0x222a33}));g.add(b);
+ const lg2=new THREE.CylinderGeometry(.007,.007,.05,8);lg2.rotateX(Math.PI/2);lg2.translate(0,0,.025);const lev=new THREE.Mesh(lg2,new THREE.MeshStandardMaterial({color:0xdde6ee,metalness:.8,roughness:.3}));g.add(lev);
+ const led=new THREE.Mesh(new THREE.SphereGeometry(.011,10,8),new THREE.MeshBasicMaterial({color:0x444444}));led.position.set(0,.04,.01);g.add(led);A.add(g);cpS.push({g,lev,led})});
+const qcPlane=new THREE.Mesh(new THREE.PlaneGeometry(4.3,4.3),glowM(0x40ff9a));qcPlane.rotation.y=Math.PI/2;qcPlane.material.opacity=.14;A.add(qcPlane);
+const swPk=[];for(let i=0;i<12;i++){const c=document.createElement('canvas');c.width=320;c.height=64;const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));s.scale.set(.75,.15,1);s.userData={c,t,last:1};A.add(s);swPk.push(s)}
+const binStr=()=>{const o=[],g=2+Math.floor(Math.random()*3);for(let i=0;i<g;i++){let w='';const l=2+Math.floor(Math.random()*6);for(let j=0;j<l;j++)w+=Math.random()<.5?'0':'1';o.push(w)}return o.join(' ')};
+function drawBin(s){const c=s.userData.c,x=c.getContext('2d');x.clearRect(0,0,320,64);x.font='bold 34px ui-monospace,Consolas,monospace';x.textAlign='center';x.fillStyle='#7dffb0';x.shadowColor='#3dff7a';x.shadowBlur=10;x.fillText(binStr(),160,44);s.userData.t.needsUpdate=true}
+swPk.forEach(drawBin);let lastBin=0,hb='01 001 0001111',autoOn=true,lastCur=-1,slideT=0;
+const ab=document.createElement('button');ab.textContent='AUTO ❚❚';ab.style.cssText='width:auto;padding:0 12px;font-size:12px;letter-spacing:.08em';ab.onclick=()=>{autoOn=!autoOn;ab.textContent=autoOn?'AUTO ❚❚':'AUTO ▶'};document.getElementById('nav').appendChild(ab);
+const swLap=new THREE.Group();{const dk=new THREE.MeshStandardMaterial({color:0x2a313b,metalness:.6,roughness:.4});const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.025,.34),dk);b.position.y=.0125;swLap.add(b);const kb=new THREE.Mesh(new THREE.BoxGeometry(.42,.004,.2),new THREE.MeshStandardMaterial({color:0x0e1218}));kb.position.set(0,.027,.04);swLap.add(kb);
+ const sc=document.createElement('canvas');sc.width=320;sc.height=210;swLap.userData.sc=sc;const st=new THREE.CanvasTexture(sc);swLap.userData.st=st;
+ const scr=new THREE.Group();scr.position.set(0,.025,-.16);scr.rotation.x=-.3;const fr=new THREE.Mesh(new THREE.BoxGeometry(.5,.33,.012),dk);fr.position.y=.165;scr.add(fr);const pl=new THREE.Mesh(new THREE.PlaneGeometry(.46,.29),new THREE.MeshBasicMaterial({map:st}));pl.position.set(0,.165,.007);scr.add(pl);swLap.add(scr);swLap.position.set(11.6,-.735,.9);swLap.scale.setScalar(1.5);A.add(swLap)}
+let lastLap=0;function drawLap(p){const c=swLap.userData.sc,x=c.getContext('2d');x.fillStyle='#06182b';x.fillRect(0,0,320,210);x.fillStyle='#0d3a5c';x.fillRect(0,0,320,30);x.fillStyle='#6ff2ff';x.font='bold 17px Segoe UI,Arial';x.fillText('SKYFIVE PORTAL',12,21);x.fillStyle='#cfe6f7';x.font='13px Segoe UI,Arial';x.fillText('Software upload  ·  RJ48 → CS',12,56);x.fillStyle='#0b2a44';x.fillRect(12,70,296,22);x.fillStyle='#3dff7a';x.fillRect(12,70,296*p,22);x.fillStyle='#fff';x.font='bold 15px ui-monospace,Consolas,monospace';x.fillText(Math.round(p*100)+'%',130,87);x.fillStyle='#7dffb0';x.font='bold 15px ui-monospace,Consolas,monospace';for(let i=0;i<4;i++)x.fillText(binStr(),12,120+i*22);x.fillStyle='#8fb3cf';x.font='12px Segoe UI,Arial';x.fillText(p>=1?'Upload complete ✓':'Transferring to cabin server…',12,198);swLap.userData.st.needsUpdate=true}
+drawLap(0);
+const rj=tubeM([[11.95,-.72,.9],[11.95,-1.2,.9],[11.95,-1.2,.17],[11.4,-1.2,.17]],0xe8f0f8,.013);rj.visible=false;const rjL=mkLbl('RJ48 · LAPTOP → CS',true);rj.userData.n='RJ48';rj.userData.cn=[makeConn(rj,'rj',0),makeConn(rj,'rj',1)];rj.userData.cn.forEach(c=>c.visible=false);
+
+const nrays=[1,-1,0].map((_,i)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,1,6),glowM(0x6ff2ff));m.material.opacity=.9;A.add(m);return m});
+const nr=[];for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.RingGeometry(.96,1,48),new THREE.MeshBasicMaterial({color:0x6ff2ff,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false}));r.position.set(7,-2.05,0);r.rotation.x=-Math.PI/2;A.add(r);nr.push(r)}
+const hud=document.createElement('div');hud.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:118px;z-index:21;padding:9px 20px;border:1px solid #6adcff88;border-radius:30px;background:#041426bb;color:#d9f6ff;font:700 13px ui-monospace,Consolas,monospace;letter-spacing:.08em;backdrop-filter:blur(10px);pointer-events:none';document.body.appendChild(hud);
+const camS={0:[[4.6,-3.9,9],[4.6,-1.4,16]],1:[[0,0,0],[6,3,36]],2:[[1,0,0],[12,4,25]],3:[[3,0,0],[3,7,13]],4:[[10.5,-1,0],[4,2,6.5]],5:[[9,.2,0],[-2.5,3.2,9.5]],6:[[11,0,-.6],[5,2,7]],7:[[1,0,0],[12,5,25]],8:[[11.4,-.95,.5],[6.2,.5,5.8]],9:[[0,0,0],[-9,6,28]]};
+const i0=s=>s!==cpS[0];
+function IC(){const s=introPrePhase?0:stageAt(introHours);const c=camS[s];return{f:c[0],o:c[1]}}
+const sCol=new THREE.Color();let fxDone=false;
+// ---------- A320 cabin seats (3-3), detailed ----------
+(function(){
+ const rows=[];for(let x=10.4;x>=-11.6;x-=.8)rows.push(x);
+ const zs=[-1.5,-1.02,-.54,.54,1.02,1.5],arms=[-1.76,-1.26,-.78,-.3,.3,.78,1.26,1.76],N=rows.length*zs.length,d=new THREE.Object3D();
+ const mk=(w,h,dd,col,n,em)=>{const m=new THREE.InstancedMesh(new THREE.BoxGeometry(w,h,dd),new THREE.MeshStandardMaterial({color:col,roughness:.8,metalness:.05,emissive:col,emissiveIntensity:em||.08}),n);A.add(m);return m};
+ const put=(m,i,x,y,z,rz,ry)=>{d.position.set(x,y,z);d.rotation.set(0,ry||0,rz||0);d.updateMatrix();m.setMatrixAt(i,d.matrix)};
+ const cu=mk(.48,.1,.5,0x2f4d73,N),pan=mk(.4,.06,.44,0x172233,N),bl=mk(.07,.4,.5,0x2f4d73,N),bu=mk(.06,.2,.46,0x2f4d73,N),hd=mk(.08,.17,.36,0x7aa3d6,N,.16),wg=mk(.09,.15,.07,0x7aa3d6,N*2,.16),co=mk(.06,.3,.3,0x172233,N),tr=mk(.015,.26,.36,0x9fb0c3,N,.04),pk=mk(.02,.12,.3,0x0f1824,N),am=mk(.4,.04,.055,0x9fb0c3,rows.length*arms.length,.05);
+ let i=0,j=0,k=0;for(const x of rows){for(const z of zs){put(cu,i,x,-.5,z);put(pan,i,x,-.57,z);put(bl,i,x-.22,-.22,z,.12);put(bu,i,x-.28,.07,z,.14);put(hd,i,x-.3,.25,z,.15);put(wg,i*2,x-.25,.25,z-.2,.15,.35);put(wg,i*2+1,x-.25,.25,z+.2,.15,-.35);put(co,i,x-.04,-.68,z);put(tr,i,x-.265,-.2,z,.12);put(pk,i,x-.25,-.44,z,.12);i++}
+  for(const z of arms){put(am,k,x-.02,-.31,z);k++}}
+ [cu,pan,bl,bu,hd,wg,co,tr,pk,am].forEach(m=>m.instanceMatrix.needsUpdate=true);
+ const rn=new THREE.Mesh(new THREE.BoxGeometry(23.5,.006,.56),new THREE.MeshBasicMaterial({color:0x1b4a7a,transparent:true,opacity:.6}));rn.position.set(-.6,-.73,0);A.add(rn);
+ const bm=new THREE.MeshStandardMaterial({color:0xd7e2ee,transparent:true,opacity:.28,roughness:.5,side:THREE.DoubleSide,depthWrite:false});
+ for(const s of[-1,1])for(let x=11;x>-12.5;x-=1.9){const b=new THREE.Mesh(new THREE.BoxGeometry(1.75,.3,.5),bm);b.position.set(x-.9,1.3,s*1.1);A.add(b);b.add(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),new THREE.LineBasicMaterial({color:0x9fd8ff,transparent:true,opacity:.35})))}
+})();
+// ================= FINAL DASHBOARD (after flight): manpower, time, man-hours =================
+const ACT=[{n:'QC acceptance',s:0,e:1.5,m:2,d:'QUALITY TEAM',c:'#9b8bff'},{n:'Panel removal',s:1.5,e:7.5,m:8,d:'MRO OPERATIONS',c:'#37d4ff'},{n:'HW install',s:7.5,e:15.5,m:7,d:'MRO OPERATIONS',c:'#3dff7a'},{n:'Cabling',s:15.5,e:25.5,m:8,d:'MRO OPERATIONS',c:'#ffb02e'},{n:'Wiring test',s:25.5,e:27.5,m:2,d:'MRO OPERATIONS',c:'#ff6a7a'},{n:'Final QC',s:27.5,e:29,m:2,d:'QUALITY TEAM',c:'#9b8bff'},{n:'SW upload',s:29,e:35,m:1,d:'SKYFIVE ENGINEER',c:'#6ff2ff'},{n:'E2E test',s:35,e:36,m:1,d:'SKYFIVE ENGINEER',c:'#6ff2ff'}];
+const DC={'QUALITY TEAM':'#9b8bff','MRO OPERATIONS':'#ffb02e','SKYFIVE ENGINEER':'#6ff2ff'};
+ACT.forEach(a=>{a.h=a.e-a.s;a.mh=a.m*a.h});const TMH=ACT.reduce((t,a)=>t+a.mh,0),PEAK=Math.max(...ACT.map(a=>a.m));
+const DEP={};ACT.forEach(a=>DEP[a.d]=(DEP[a.d]||0)+a.mh);
+const dashEl=document.createElement('div');dashEl.id='dash';
+const css=document.createElement('style');css.textContent=`#dash{position:fixed;inset:0;z-index:2;display:none;pointer-events:none;padding:112px 3vw 84px;box-sizing:border-box;color:#eaf6ff;font-family:"Segoe UI",Arial,sans-serif;grid-template-columns:minmax(290px,27vw) 1fr minmax(380px,35vw);grid-template-rows:auto 1fr;gap:14px}
+#dash .kp{grid-column:1/4;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+#dash .pn{background:linear-gradient(135deg,rgba(6,24,44,.66),rgba(4,12,26,.5));border:1px solid #5fd3ff44;border-radius:14px;padding:12px 14px;backdrop-filter:blur(14px);box-shadow:0 10px 40px #0007,inset 0 1px #ffffff14}
+#dash .k{text-align:center;}#dash .k:nth-child(2){animation-delay:.3s}#dash .k:nth-child(3){animation-delay:.6s}#dash .k:nth-child(4){animation-delay:.9s}#dash .k:nth-child(5){animation-delay:1.2s}
+#dash .k b{display:block;font:800 clamp(24px,3.2vw,46px)/1.1 ui-monospace,Consolas,monospace;color:#fff;text-shadow:0 0 22px #2bcfff88}#dash .k small,#dash .pt{font-size:10.5px;letter-spacing:.17em;color:#8fd8ff;font-weight:700}#dash .k i{font-style:normal;font-size:11px;color:#ffd27a;letter-spacing:.1em}
+#dash .pt{margin-bottom:8px;display:flex;justify-content:space-between}#dash .col{display:flex;flex-direction:column;gap:14px;min-height:0}#dash svg{width:100%;height:auto;display:block;overflow:visible}
+#dash .foot{font-size:11px;color:#9bb7d0;line-height:1.5;margin-top:6px}#dash .lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;margin-top:6px;color:#cfe6f7}#dash .lg span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:var(--c)}
+@keyframes in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}@keyframes dw{to{stroke-dashoffset:0}}@keyframes sp{from{transform:scale(.6) rotate(-120deg);opacity:0}to{transform:none;opacity:1}}#dash .pn{animation:in .7s ease-out both}#dash .kp .pn:nth-child(2){animation-delay:.1s}#dash .kp .pn:nth-child(3){animation-delay:.2s}#dash .kp .pn:nth-child(4){animation-delay:.3s}#dash .kp .pn:nth-child(5){animation-delay:.4s}#dash .col:nth-of-type(1) .pn:nth-child(1){animation-delay:.35s}#dash .col:nth-of-type(1) .pn:nth-child(2){animation-delay:.55s}#dash .col:last-child .pn{animation-delay:.5s}#dash .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:dw 1.8s ease-out .6s forwards}#dash svg.dn{animation:sp 1.3s ease-out .7s both}@keyframes kp{0%,100%{box-shadow:0 10px 40px #0007,0 0 0 #37d4ff00}50%{box-shadow:0 10px 40px #0007,0 0 26px #37d4ff77}}@keyframes bp{0%,100%{opacity:.62}50%{opacity:1}}@keyframes dg{0%,100%{filter:drop-shadow(0 0 2px #37d4ff)}50%{filter:drop-shadow(0 0 9px #37d4ff)}}
+#dash .gb{transform-box:fill-box;transform-origin:left center;animation:gr 1.1s ease-out both}@keyframes gr{from{transform:scaleX(0)}to{transform:scaleX(1)}}#dash .cb{pointer-events:auto;position:fixed;top:14px;right:16px;z-index:6;padding:9px 16px;border:1px solid #ff8a9a99;background:#2a0a14cc;color:#ffd9de;border-radius:10px;font:700 12px 'Segoe UI',Arial;letter-spacing:.1em;cursor:pointer;backdrop-filter:blur(10px)}
+@media(max-width:900px){#dash{grid-template-columns:1fr;overflow:auto;pointer-events:auto;background:rgba(5,10,20,.9);padding-top:70px}#dash .kp{grid-column:1;grid-template-columns:repeat(2,1fr)}}`;document.head.appendChild(css);
+// charts
+const TW=36,f1=n=>n.toFixed(1).replace('.0','');
+let step='M28,122',stepF='M28,122';{let y=m=>122-m*(110/PEAK);ACT.forEach((a,i)=>{const x0=28+a.s/TW*320,x1=28+a.e/TW*320;step+=(i?' V'+y(a.m):' V'+y(a.m))+' H'+x1;stepF+=' V'+y(a.m)+' H'+x1});stepF+=' V122 Z'}
+let axs='';for(let h=0;h<=36;h+=6)axs+=`<line x1="${28+h/TW*320}" x2="${28+h/TW*320}" y1="12" y2="122" stroke="#ffffff18"/><text x="${28+h/TW*320}" y="138" fill="#8fb3cf" font-size="9" text-anchor="middle">${h}h</text>`;
+for(let m=0;m<=PEAK;m+=2)axs+=`<text x="22" y="${125-m*(110/PEAK)}" fill="#8fb3cf" font-size="9" text-anchor="end">${m}</text>`;
+const stepSVG=`<svg viewBox="0 0 360 146"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#37d4ff" stop-opacity=".55"/><stop offset="1" stop-color="#37d4ff" stop-opacity="0"/></linearGradient></defs>${axs}<path d="${stepF}" fill="url(#sg)"/><path d="${step}" class="draw" pathLength="1" fill="none" stroke="#6ff2ff" stroke-width="2" style="filter:drop-shadow(0 0 5px #37d4ff)"/><circle r="11" fill="#6ff2ff" opacity=".22"><animateMotion dur="12s" repeatCount="indefinite" path="${step}"/><animate attributeName="r" values="7;15;7" dur="1.4s" repeatCount="indefinite"/></circle><circle r="5" fill="#fff"><animateMotion dur="12s" repeatCount="indefinite" path="${step}"/><animate attributeName="r" values="4;8;4" dur="1.1s" repeatCount="indefinite"/></circle><text x="${28+22/TW*320}" y="${122-PEAK*110/PEAK-3}" fill="#ffd27a" font-size="10" font-weight="700">PEAK ${PEAK} PEOPLE · 15:30 → 25:30</text></svg>`;
+let C0=2*Math.PI*44,off=0,dsvg='',lgd='';Object.entries(DEP).forEach(([k,v])=>{const l=v/TMH*C0;dsvg+=`<circle cx="60" cy="60" r="44" fill="none" stroke="${DC[k]}" stroke-width="15" stroke-dasharray="${l-1.5} ${C0-l+1.5}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"/>`;off+=l;lgd+=`<span style="--c:${DC[k]}">${k} · ${v} MH · ${Math.round(v/TMH*100)}%</span>`});
+const donutSVG=`<div style="display:flex;gap:10px;align-items:center"><svg class="dn" viewBox="0 0 120 120" style="width:46%">${dsvg}<text x="60" y="58" fill="#fff" font-size="20" font-weight="800" text-anchor="middle" font-family="ui-monospace,monospace">${TMH}</text><text x="60" y="72" fill="#8fd8ff" font-size="8" text-anchor="middle" letter-spacing="1.5">MAN-HOURS</text></svg><div class="lg" style="flex-direction:column;margin:0">${lgd}</div></div>`;
+let gx='';const AX=154,GS=300/36,RH=31,hhmm=h=>String(Math.floor(h)).padStart(2,'0')+':'+String(Math.round((h%1)*60)).padStart(2,'0'),YB=8+RH*10;
+for(let h=0;h<=36;h+=6)gx+=`<line x1="${AX+h*GS}" x2="${AX+h*GS}" y1="4" y2="${YB}" stroke="#ffffff16"/><text x="${AX+h*GS}" y="${YB+14}" fill="#8fb3cf" font-size="10" text-anchor="middle">${h}h</text>`;
+gx+=`<text x="112" y="16" fill="#ffd9a0" font-size="11" text-anchor="end" font-weight="700">Pre-MRO inspection</text><text x="112" y="28" fill="#8fb3cf" font-size="9" text-anchor="end">≥ 3 days before MRO</text><rect x="118" y="10" width="30" height="17" rx="4" fill="#ffb02e" opacity=".75" stroke="#fff" stroke-dasharray="3 2"/><path d="M128,8 l4,10 l-4,10 M134,8 l4,10 l-4,10" stroke="#06121f" stroke-width="2" fill="none"/><text x="${AX+8}" y="22" fill="#ffd9a0" font-size="10">2 logistics · time not counted in clock</text><line x1="${AX}" x2="${AX}" y1="4" y2="${YB}" stroke="#ffd27a" stroke-dasharray="4 3"/>`;
+ACT.forEach((a,i)=>{const y=8+(i<3?i+1:i+2)*RH,x=AX+a.s*GS,w=a.h*GS,t=a.m+'×'+f1(a.h)+'='+f1(a.mh)+' MH';let lab;if(w>=82)lab=`<text x="${x+w/2}" y="${y+15}" fill="#06121f" font-size="10" font-weight="800" text-anchor="middle">${t}</text>`;else if(x+w+78<468)lab=`<text x="${x+w+5}" y="${y+15}" fill="#ffe0b0" font-size="10" font-weight="700">${t}</text>`;else lab=`<text x="${x-5}" y="${y+15}" fill="#ffe0b0" font-size="10" font-weight="700" text-anchor="end">${t}</text>`;
+ gx+=`<text x="112" y="${y+12}" fill="#e3f2fc" font-size="11" font-weight="600" text-anchor="end">${a.n}</text><text x="112" y="${y+24}" fill="#8fb3cf" font-size="9" text-anchor="end">${hhmm(a.s)} → ${hhmm(a.e)}</text><rect class="gb" style="animation-delay:${i*.12}s" x="${x}" y="${y+2}" width="${Math.max(w,3)}" height="19" rx="5" fill="${a.c}"/>`+lab});
+{const y=8+4*RH;gx+=`<text x="112" y="${y+12}" fill="#ffd9a0" font-size="11" text-anchor="end" font-weight="600">Antenna (parallel)</text><text x="112" y="${y+24}" fill="#8fb3cf" font-size="9" text-anchor="end">07:30 → 25:30</text>`+[[7.5,11.5,'drill','#ffb02e'],[11.5,23.5,'sealant cure 12 h','#7d8a99'],[23.5,25.5,'','#3dff7a']].map(a=>`<rect class="gb" x="${AX+a[0]*GS}" y="${y+2}" width="${(a[1]-a[0])*GS-1}" height="19" rx="5" fill="${a[3]}" opacity=".9" stroke="#fff" stroke-dasharray="3 2" stroke-opacity=".5"/><text x="${AX+(a[0]+a[1])/2*GS}" y="${y+15}" fill="#06121f" font-size="10" font-weight="800" text-anchor="middle">${a[2]}</text>`).join('')+`<text x="${AX+25.5*GS+5}" y="${y+15}" fill="#b9ffd0" font-size="10" font-weight="700">fit antenna</text>`}
+const ganttSVG=`<svg viewBox="0 0 470 342">${gx}</svg>`;
+const KP=[['ELAPSED TIME',36,v=>String(Math.round(v)).padStart(2,'0')+':00','HOURS'],['PEAK MANPOWER',PEAK,v=>Math.round(v),'PEOPLE AT ONCE'],['TOTAL MAN-HOURS',TMH,v=>Math.round(v),'MH'],['AVERAGE CREW',TMH/36,v=>v.toFixed(1),'PEOPLE / HOUR'],['INSTALL TIME',2.5,v=>v.toFixed(1),'DAYS · 16 H WORKING DAY']];
+dashEl.innerHTML=`<div class="kp">${KP.map((k,i)=>`<div class="pn k"><small>${k[0]}</small><b data-i="${i}">0</b><i>${k[3]}</i></div>`).join('')}</div><div class="col"><div class="pn"><div class="pt"><span>MANPOWER vs CLOCK</span><span>PEOPLE</span></div>${stepSVG}</div><div class="pn"><div class="pt"><span>MAN-HOURS BY DEPARTMENT</span></div>${donutSVG}</div></div><div style="text-align:center;align-self:start"><div class="pt" style="justify-content:center;text-shadow:0 0 12px #000;margin:4px 0">MAN-HOURS PER ACTIVITY · 3D</div></div><div class="col"><div class="pn"><div class="pt"><span>ACTIVITY TIMELINE · CREW × HOURS = MAN-HOURS</span></div>${ganttSVG}<div class="foot">Antenna drilling, 12 h sealant cure and fitting run in parallel with the main work. Pre-MRO inspection (2 logistics, ≥ 3 days) is outside the clock and man-hours. MRO operations: panels, install, cabling, wiring test. E2E test crew (1) is an assumption.</div></div></div>`;{const cb=document.createElement('button');cb.className='cb';cb.textContent='✕ CLOSE DASHBOARD';cb.onclick=()=>{autoOn=false;ab.textContent='AUTO ▶';go(8)};dashEl.appendChild(cb)}document.body.appendChild(dashEl);
+// 3D man-hour columns: rise once, then hold still
+const D=new THREE.Group();D.visible=false;D.position.x=-1;D.position.y=-.45;S.add(D);const dcols=[],dlb=[],SN=['QC 1','PANELS','HW','CABLING','TEST','QC 2','SW','E2E'];
+ACT.forEach((a,i)=>{const hgt=Math.max(.15,a.mh*.04),col=new THREE.Color(a.c),x=(i-3.5)*.95;
+ const m=new THREE.Mesh(new THREE.BoxGeometry(.6,1,.6),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.6,metalness:.4,roughness:.3}));m.scale.y=.01;m.position.set(x,-2,0);D.add(m);
+ const gl2=new THREE.Mesh(new THREE.BoxGeometry(.78,1,.78),glowM(col.getHex()));gl2.material.opacity=.14;gl2.scale.y=.01;D.add(gl2);
+ const rg=new THREE.Mesh(new THREE.RingGeometry(.42,.48,40),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false}));rg.rotation.x=-Math.PI/2;rg.position.set(x,-1.98,0);D.add(rg);
+ const l1=mkLbl(a.mh+' MH',true),l2=mkLbl(SN[i],true);l1.style.cssText='font:800 12px Segoe UI,Arial;border-color:'+a.c;l2.style.cssText='font-size:10px;letter-spacing:.06em;border-color:'+a.c+'88;transform-origin:center';
+ dcols.push({m,gl2,rg,hgt,x});dlb.push([l1,l2])});
+function dashFrame(tm){if(infoCur!==cur){infoCur=cur;closeInfo()}const dsh=slides[cur]&&slides[cur].k==='dash'&&!introActive;dashEl.style.display=dsh?'grid':'none';D.visible=dsh;document.getElementById('card').style.display=dsh||introActive?'none':'block';document.getElementById('tag').style.display=dsh?'none':'';
+ if(dsh){A.visible=false;G.visible=false;grid.visible=true;for(const k in items)items[k].forEach(it=>it.el.style.display='none');
+  const k2=ez(cl01((tm-slideT)/900));C.position.lerp(V(0,2.4,15),k2);C.lookAt(cl.clone().lerp(V(0,-.3,0),k2));
+  const k=ez(cl01((tm-slideT)/2200));dashEl.querySelectorAll('.k b').forEach(b=>{const q=KP[+b.dataset.i];b.textContent=q[2](q[1]*k)});
+  dcols.forEach((c,i)=>{const h=Math.max(.01,c.hgt*cl01(ez(cl01((tm-slideT)/2200-i*.08))));c.m.scale.y=h;c.m.position.y=-2+h/2;c.gl2.scale.y=h*1.01;c.gl2.position.set(c.x,-2+h/2,0);{const ph=((tm-slideT)*.00033+i*.11)%1;c.rg.scale.setScalar(1+ph*.9);c.rg.material.opacity=.7*(1-ph)}
+   const top=V(c.x-1,-2+h+.28-.45,0),bot=V(c.x-1,-2.12-.45,.5);projL(dlb[i][0],top,true);projL(dlb[i][1],bot,true);dlb[i][0].classList.add('on');dlb[i][1].classList.add('on')})}
+ else{dlb.forEach(l=>{l[0].style.display='none';l[1].style.display='none'});planEl.style.display='none'}}
+{const fl=slides[9],gr=slides[8];gr.t='GROUND NETWORK · 45,000 FT · SITE A → C';gr.f=fl.f;gr.o=fl.o;gr.d='The aircraft starts above GSM site A and flies the corridor to site C at 45,000 ft (13.716 km). One red laser links it to the active site and switches site to site as it goes. Sites are 120 km apart and each sector reaches 75 km. When it reaches site C the dashboard opens.';gr.s=fl.s;slides.splice(9,1);dots.removeChild(dots.lastChild)}
+slides.push({t:'INSTALLATION DASHBOARD',k:'dash',f:[0,-.3,0],o:[0,2.4,15],d:'',s:[]});
+{const b=document.createElement('button');b.className='dot';b.setAttribute('aria-label','Dashboard');const i=slides.length-1;b.onclick=()=>go(i);dots.appendChild(b)}
+function acX(tm){if(reduce)return -12;if(cur===8)return cur!==lastCur?-12:-12+24*ez(cl01((tm-slideT)/20000));const p=(tm/13000)%2;return -12+24*(p<1?p:2-p)}
+function acR(tm){if(reduce||cur===8)return 0;return((tm/13000)%2)<1?0:Math.PI}
+// ===== FLY-OVER ANALYTICS: signal model, heat strip, handover zones, trail, live panel =====
+const SITESX=[-12,0,12];
+function sigAt(x){let bd=1e9,si=0;SITESX.forEach((s,i)=>{const d=Math.abs(x-s);if(d<bd){bd=d;si=i}});const d=bd*10,sl=Math.hypot(d,13.7),dbm=-45-30*Math.log10(sl/14)-Math.max(0,10-d)*.5;return{si,d,sl,dbm,mbps:Math.max(20,(dbm+78)*4.2),lat:14+d*.06,el:Math.atan2(13.7,d)*180/Math.PI}}
+{const cv=document.createElement('canvas');cv.width=1024;cv.height=48;const x=cv.getContext('2d');for(let i=0;i<1024;i++){const s=sigAt(-20+40*i/1023),t=cl01((s.dbm+66)/20);x.fillStyle='rgb('+Math.round(LL(155,61,t))+','+Math.round(LL(139,255,t))+','+Math.round(LL(255,122,t))+')';x.fillRect(i,0,1,48)}
+ const st=new THREE.Mesh(new THREE.PlaneGeometry(40,.9),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:.88,depthWrite:false}));st.rotation.x=-Math.PI/2;st.position.set(0,-3.07,-1.3);G.add(st);gl.push([mkLbl('SIGNAL ALONG CORRIDOR · STRONG → WEAK',true),V(-14,-2.9,-1.3)]);
+ [-6,6].forEach((bx2,i)=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(3,10),glowM(0x9b8bff));pl.material.opacity=.09;pl.position.set(bx2,1.8,0);G.add(pl);const ed=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(3,10)),new THREE.LineBasicMaterial({color:0xb7a8ff,transparent:true,opacity:.5}));ed.position.copy(pl.position);G.add(ed);gl.push([mkLbl('HANDOVER ZONE '+'AB'[i]+' → '+'BC'[i],true),V(bx2,6.9,0)])})}
+const TRN=160,trailG=new THREE.BufferGeometry(),trailP=new Float32Array(TRN*3),trailC=new Float32Array(TRN*3);trailG.setAttribute('position',new THREE.BufferAttribute(trailP,3));trailG.setAttribute('color',new THREE.BufferAttribute(trailC,3));
+const trail=new THREE.Line(trailG,new THREE.LineBasicMaterial({vertexColors:true}));trail.frustumCulled=false;G.add(trail);let tpts=[],hist=[],hoN=0,lastSi=-1,anaCur=-1,lastH=0;
+const anaEl=document.createElement('div');anaEl.id='ana';anaEl.innerHTML='<div class="ah">LIVE A2G LINK ANALYTICS</div><div class="ag"><div><small>SERVING SITE</small><b id="aSite">A</b></div><div><small>SIGNAL (RSRP)</small><b id="aRs"></b></div><div><small>THROUGHPUT</small><b id="aTp"></b></div><div><small>LATENCY</small><b id="aLa"></b></div><div><small>SLANT RANGE</small><b id="aSl"></b></div><div><small>ELEVATION</small><b id="aEl"></b></div></div><canvas id="aC" width="300" height="76"></canvas><div class="al"><span style="color:#6ff2ff">● SIGNAL</span><span style="color:#b7a8ff">▮ THROUGHPUT</span></div><div class="ap"><span>HANDOVERS <b id="aHo">0</b></span><span>A → C <b id="aPr">0%</b></span></div><div class="apg"><i id="aPg"></i></div><div class="ft2">Simulated values for demonstration · 850 km/h assumed</div>';document.body.appendChild(anaEl);
+const aq=id=>document.getElementById(id),aCx=aq('aC').getContext('2d');
+function anaFrame(tm){const on=cur===8&&!introActive;anaEl.style.display=on?'block':'none';trail.visible=on;if(!on){anaCur=-1;return}
+ if(anaCur!==cur){anaCur=cur;tpts=[];hist=[];hoN=0;lastSi=-1}
+ const x=airplane.position.x,s=sigAt(x);if(lastSi>=0&&s.si!==lastSi)hoN++;lastSi=s.si;
+ const lp=tpts[tpts.length-1];if(!lp||Math.abs(lp[0]-x)>.06){tpts.push([x,airplane.position.y-.05,airplane.position.z]);if(tpts.length>TRN)tpts.shift()}
+ for(let i=0;i<TRN;i++){const p=tpts[Math.max(0,tpts.length-TRN+i)]||tpts[0]||[x,0,0],f=i/(TRN-1);trailP.set(p,i*3);trailC[i*3]=.2*f;trailC[i*3+1]=.9*f;trailC[i*3+2]=f}trailG.attributes.position.needsUpdate=true;trailG.attributes.color.needsUpdate=true;
+ if(tm-lastH>110){lastH=tm;hist.push([s.dbm,s.mbps]);if(hist.length>110)hist.shift();const W=300,H=76;aCx.clearRect(0,0,W,H);aCx.strokeStyle='#ffffff18';for(let i=1;i<4;i++){aCx.beginPath();aCx.moveTo(0,i*H/4);aCx.lineTo(W,i*H/4);aCx.stroke()}
+  hist.forEach((q,i)=>{const px=i/109*W,bh=cl01((q[1]-20)/140)*H;aCx.fillStyle='rgba(183,168,255,.35)';aCx.fillRect(px,H-bh,W/110,bh)});
+  aCx.strokeStyle='#6ff2ff';aCx.lineWidth=2;aCx.beginPath();hist.forEach((q,i)=>{const px=i/109*W,py=H-cl01((q[0]+68)/22)*(H-8)-4;i?aCx.lineTo(px,py):aCx.moveTo(px,py)});aCx.stroke()}
+ aq('aSite').textContent='SITE '+'ABC'[s.si];aq('aRs').textContent=s.dbm.toFixed(1)+' dBm';aq('aTp').textContent=Math.round(s.mbps)+' Mbps';aq('aLa').textContent=Math.round(s.lat)+' ms';aq('aSl').textContent=s.sl.toFixed(0)+' km';aq('aEl').textContent=s.el.toFixed(1)+'°';aq('aHo').textContent=hoN;const pr=cl01((x+12)/24);aq('aPr').textContent=Math.round(pr*100)+'%';aq('aPg').style.width=pr*100+'%'}
+const ms=document.createElement('style');ms.textContent=`#ana{position:fixed;right:2.2vw;top:196px;width:min(310px,44vw);z-index:12;pointer-events:none;padding:12px 14px;border-radius:14px;background:rgba(5,18,34,.55);border:1px solid #6adcff44;backdrop-filter:blur(10px);color:#e8f6ff;font-family:"Segoe UI",Arial,sans-serif;display:none}#ana .ah{font:800 11px "Segoe UI",Arial;letter-spacing:.16em;color:#8fd8ff;margin-bottom:8px}#ana .ag{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 10px;margin-bottom:8px}#ana small{display:block;font-size:9px;letter-spacing:.12em;color:#8fb3cf}#ana .ag b{font:800 14px ui-monospace,Consolas,monospace;color:#fff}#ana canvas{width:100%;height:auto;display:block;border-radius:6px;background:#04101e88}#ana .al{display:flex;gap:14px;font-size:10px;margin:4px 0}#ana .ap{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.08em;color:#cfe6f7}#ana .ap b{color:#fff}#ana .apg{height:4px;border-radius:3px;background:#ffffff1c;margin:5px 0}#ana .apg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#37d4ff,#b7a8ff);border-radius:3px}#ana .ft2{font-size:9px;color:#8fb3cf}
+#dash .mb{display:none}#dash .mb .mr{display:grid;grid-template-columns:96px 1fr 52px;gap:8px;align-items:center;font-size:12px;margin:5px 0}#dash .mb .mr i{display:block;height:12px;border-radius:6px}#dash .mb .mr b{font:800 12px ui-monospace,Consolas,monospace;text-align:right}
+@media(max-width:820px){#dash .cb{top:56px!important;right:10px!important;padding:7px 10px!important;font-size:10px!important}#dash .cb+.cb{right:158px!important}#dash{padding-top:104px!important}#dash .mb{display:block}#dash .mt{display:none}#dash .kp{gap:8px}
+#info{left:10px!important;right:10px!important;top:auto!important;bottom:84px;width:auto}#kitList{width:176px!important;font-size:9px;padding:7px 8px}#kitList .kr i{display:none}#plan{padding-top:72px}#plan .ph b{font-size:15px}
+#ana{top:112px;right:8px;width:208px;padding:8px 10px}#ana .ag{grid-template-columns:1fr 1fr}#ana .ag b{font-size:12px}#ana canvas{display:none}#ana .al{display:none}
+.lbl{font-size:10px!important;padding:2px 5px!important}}`;document.head.appendChild(ms);
+// mobile-friendly bar list inside dashboard centre cell
+{const c=dashEl.children[2];c.classList.add('mc');const t=c.querySelector('.pt');if(t)t.classList.add('mt');const mx=Math.max(...ACT.map(a=>a.mh));c.insertAdjacentHTML('beforeend','<div class="pn mb"><div class="pt">MAN-HOURS PER ACTIVITY</div>'+ACT.map(a=>'<div class="mr"><span>'+a.n+'</span><i style="width:'+(a.mh/mx*100)+'%;background:'+a.c+'"></i><b>'+a.mh+'</b></div>').join('')+'</div>')}
+
+// ===== EXECUTIVE LAYER: component inspector + scenario planner =====
+const xs=document.createElement('style');xs.textContent=`#info{position:fixed;z-index:30;width:320px;padding:14px 16px;border-radius:14px;background:rgba(5,18,34,.82);border:1px solid #6adcff66;backdrop-filter:blur(14px);color:#e8f6ff;font:13px/1.45 "Segoe UI",Arial;box-shadow:0 14px 50px #000a,0 0 28px #37d4ff33;display:none;animation:in .35s ease-out}#info h4{margin:0 0 4px;font:800 13px "Segoe UI",Arial;letter-spacing:.1em;color:#6ff2ff}#info p{margin:0 0 8px;color:#cfe6f7}#info .kv{display:flex;justify-content:space-between;gap:10px;font:11.5px ui-monospace,Consolas,monospace;color:#d8f3ff;padding:2px 0;border-top:1px solid #ffffff14}#info .kv i{font-style:normal;color:#9fd9b4}#info .cn{margin-top:8px;font-size:12px;color:#ffd9a0}#info .x{position:absolute;top:8px;right:12px;cursor:pointer;color:#9bb7d0}
+#plan{position:fixed;inset:0;z-index:7;display:none;flex-direction:column;gap:12px;padding:86px 3vw 70px;box-sizing:border-box;background:rgba(3,9,19,.86);backdrop-filter:blur(10px);color:#eaf6ff;font-family:"Segoe UI",Arial,sans-serif;overflow:auto;animation:in .4s ease-out}
+#plan .ph{display:flex;align-items:center;gap:16px;flex-wrap:wrap}#plan .ph b{font:800 20px "Segoe UI",Arial;letter-spacing:.14em;color:#fff}#plan .ph span{color:#8fd8ff;font-size:12px;letter-spacing:.08em}#plan .ph button{margin-left:auto;padding:9px 16px;border:1px solid #6adcff88;background:#06223acc;color:#d9f6ff;border-radius:10px;font:700 12px "Segoe UI",Arial;letter-spacing:.1em;cursor:pointer}
+#plan .pg{display:grid;grid-template-columns:minmax(260px,24vw) 1fr minmax(260px,26vw);gap:14px;align-items:start}#plan .pn{background:linear-gradient(135deg,rgba(6,24,44,.7),rgba(4,12,26,.55));border:1px solid #5fd3ff44;border-radius:14px;padding:12px 14px}
+#plan .pt{font-size:10.5px;letter-spacing:.17em;color:#8fd8ff;font-weight:700;margin-bottom:8px}#plan label{display:block;font-size:12px;color:#d8ecfa;margin:9px 0 2px}#plan label span{float:right;font:800 13px ui-monospace,Consolas,monospace;color:#fff}#plan input[type=range]{width:100%;accent-color:#37d4ff}
+#plan .sc{border-left:3px solid #37d4ff;padding-left:10px}#plan .big{font:800 clamp(30px,4vw,56px)/1.05 ui-monospace,Consolas,monospace;color:#fff;text-shadow:0 0 22px #2bcfff88}#plan .sm{font-size:11px;letter-spacing:.14em;color:#8fd8ff}#plan .row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}#plan .row>div{min-width:110px}
+#plan .msg{padding:9px 12px;border-radius:10px;font-size:12.5px;background:#0b2f4a88;border:1px solid #37d4ff44;margin:6px 0}#plan .ft{font-size:10.5px;color:#9bb7d0;line-height:1.5;margin-top:8px}#plan svg{width:100%;height:auto;display:block}
+@media(max-width:900px){#plan .pg{grid-template-columns:1fr}}`;document.head.appendChild(xs);
+// ---- inspector ----
+const INFO={ant:{n:'A2G ANTENNA (ACGC)',r:'Fuselage antenna: sends and receives radio to the ground sites.',k:[['230-02044-01A','Antenna install'],['210-02056-01A','Doubler']],c:'2 × coax to RRH'},
+ rrh:{n:'REMOTE RADIO HEAD (RRH)',r:'Radio unit: turns baseband into RF and feeds the antenna.',k:[['230-02046-01A','RRH equipment'],['210-02058-01A','BMU/RRH bracket']],c:'2 × coax → antenna · 1 × CPRI → BMU · 1 × power'},
+ bmu:{n:'BASEBAND UNIT (BMU)',r:'Runs the A2G modem. The SCM with SIM card sits inside.',k:[['230-02045-01A','BMU equipment'],['210-02058-01A','BMU/RRH bracket']],c:'CPRI ↔ RRH · CPRI → CS · power'},
+ cs:{n:'CABIN SERVER (CS)',r:'Links the A2G modem to cabin Wi-Fi and the maintenance port.',k:[['210-02060-01B','Server tray'],['230-02041-01A','Maint. port']],c:'CPRI ← BMU · 3 × fiber ← CWAP · RJ48 laptop port'},
+ wap:{n:'CABIN WI-FI ACCESS POINT (CWAP)',r:'Ceiling access point that gives passengers Wi-Fi.',k:[['210-02059-01A','CWAP brackets'],['230-02047-01A','CWAP equipment']],c:'1 × fiber → CS · 1 × power'},
+ cp:{n:'CONTROL PANEL',r:'Circuit breakers, power switches and the reset toggle.',k:[['220-02019-01B','Harness · CB'],['220-02020-01B','Harness · A/C']],c:'Power → CS, CWAPs, BMU, RRH'}};
+const rc=new THREE.Raycaster(),mp2=new THREE.Vector2(),pickMap=new Map();for(const k in items)items[k].forEach(it=>it.g.traverse(o=>{if(o.isMesh)pickMap.set(o,{k,g:it.g})}));
+const infoEl=document.createElement('div');infoEl.id='info';document.body.appendChild(infoEl);let selHp=null,infoCur=-1,dn=null;
+function closeInfo(){infoEl.style.display='none';if(selHp){S.remove(selHp);selHp=null}}
+function showInfo(h,x,y){const d=INFO[h.k];infoEl.innerHTML='<span class="x">✕</span><h4>'+d.n+'</h4><p>'+d.r+'</p>'+d.k.map(k=>'<div class="kv"><span>KIT '+k[0]+'</span><i>'+k[1]+'</i></div>').join('')+'<div class="cn">⚡ '+d.c+'</div>';infoEl.querySelector('.x').onclick=closeInfo;
+ infoEl.style.display='block';infoEl.style.left=Math.max(10,Math.min(x+18,innerWidth-340))+'px';infoEl.style.top=Math.max(10,Math.min(y+18,innerHeight-230))+'px';
+ if(selHp)S.remove(selHp);const b=new THREE.Box3().setFromObject(h.g);b.expandByScalar(.06);selHp=new THREE.Box3Helper(b,0x6ff2ff);S.add(selHp)}
+R.domElement.addEventListener('pointerdown',e=>dn=[e.clientX,e.clientY]);
+R.domElement.addEventListener('click',e=>{if(dn&&Math.hypot(e.clientX-dn[0],e.clientY-dn[1])>5)return;if(introActive||!A.visible)return;const r=R.domElement.getBoundingClientRect();mp2.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(mp2,C);
+ const hits=rc.intersectObjects([...pickMap.keys()],false).filter(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent}return true});if(!hits.length){closeInfo();return}showInfo(pickMap.get(hits[0].object),e.clientX,e.clientY)});
+const tg=document.getElementById('tag');if(tg)tg.textContent=tg.textContent+' · click a unit for details';
+// ---- scenario planner (Sankey flow, professional layout) ----
+const planEl=document.createElement('div');planEl.id='plan';let scen=1;
+const pcss=document.createElement('style');pcss.textContent=`#plan .pw{display:grid;grid-template-columns:minmax(270px,23vw) minmax(0,1fr);gap:14px;align-items:start;max-width:1500px;width:100%;margin:0 auto}#plan .pa{position:sticky;top:0}#plan .pm{display:flex;flex-direction:column;gap:12px;min-width:0}
+#plan .kc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}#plan .kc .pn{padding:12px 14px}#plan .kc .big{font-size:clamp(24px,2.6vw,38px)}#plan .two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+#plan .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}#plan .seg button{padding:9px 6px;border:1px solid #5fd3ff55;background:#06223a88;color:#cfe6f7;border-radius:10px;font:700 11px "Segoe UI",Arial;letter-spacing:.06em;cursor:pointer;line-height:1.35}#plan .seg button small{display:block;font-weight:500;color:#8fb3cf;letter-spacing:0}#plan .seg button.on{background:linear-gradient(135deg,#0d4a73,#0a2f4d);border-color:#6ff2ff;color:#fff;box-shadow:0 0 18px #37d4ff44}
+#plan .sk{width:100%;overflow:hidden}#plan .nf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#plan .nf .big{font-size:24px}
+@media(max-width:900px){#plan .pw{grid-template-columns:1fr}#plan .pa{position:static}#plan .kc{grid-template-columns:repeat(2,minmax(0,1fr))}#plan .two{grid-template-columns:1fr}}`;document.head.appendChild(pcss);
+const SLd=(id,l,mn,mx,v)=>`<label>${l}<span id="v_${id}">${v}</span><input type="range" id="${id}" min="${mn}" max="${mx}" value="${v}"></label>`;
+planEl.innerHTML=`<div class="ph"><b>SCENARIO PLANNER</b><span>TIME FLOW AND FLEET ROLLOUT · UPDATES LIVE</span><button id="planX">✕ BACK TO DASHBOARD</button></div><div class="pw"><aside class="pn pa"><div class="pt">SCENARIO</div><div class="seg"><button data-s="1" class="on">① STANDARD MRO<small>16 h working day</small></button><button data-s="2">② NOSE-TO-NOSE<small>SW at night ground</small></button></div><div class="pt">CREW PER MRO ACTIVITY</div>${SLd('cP','Panel removal',2,12,8)}${SLd('cH','HW install',2,12,7)}${SLd('cC','Cabling',2,14,8)}${SLd('cT','Wiring test',1,6,2)}<div class="pt" style="margin-top:16px">FLEET</div>${SLd('nA','Aircraft',1,100,60)}${SLd('nB','Hangar bays in parallel',1,6,2)}<div class="ft">Crew changes shorten or lengthen the MRO tasks. QC, sealant cure (12 h), SW upload and E2E are fixed. Standard: 16 working hours a day. Nose-to-nose: continuous 24 h flow in MRO, with SW upload and E2E on a normal night ground stop. Days are rounded up to half a day.</div></aside>
+<main class="pm"><div class="kc"><div class="pn"><div class="sm">WORK TIME PER AIRCRAFT</div><div class="big" id="kEl">36:00</div><div class="sm" id="kElS"></div></div><div class="pn"><div class="sm">DAYS PER AIRCRAFT</div><div class="big" id="kD">2.5</div><div class="sm" id="kDs"></div></div><div class="pn"><div class="sm">FLEET CALENDAR TIME</div><div class="big" id="kF">0</div><div class="sm" id="kFs"></div></div><div class="pn"><div class="sm" id="kVl">SAVING</div><div class="big" id="kV">0</div><div class="sm" id="kVs"></div></div></div>
+<div class="msg" id="rMsg"></div><div class="pn"><div class="pt">WHERE THE TIME GOES · SANKEY</div><div class="sk" id="sk1"></div></div>
+<div class="two"><div class="pn"><div class="pt">FLEET FLOW · SANKEY</div><div class="sk" id="sk2"></div></div><div class="pn"><div class="pt">NETWORK FACTS AT FL450 · SCHEMATIC</div><div class="nf"><div><div class="sm">HANDOVER EVERY</div><div class="big">8.5 min</div><div class="sm">120 km at 850 km/h</div></div><div><div class="sm">SLANT RANGE</div><div class="big">76 km</div><div class="sm">at 75 km sector edge</div></div><div><div class="sm">ELEVATION</div><div class="big">10.4°</div><div class="sm">13.7 km altitude</div></div><div><div class="sm">FREE-SPACE LOSS</div><div class="big">136 dB</div><div class="sm">~2 GHz, illustrative</div></div></div><div class="ft">Needs RF validation before use with clients.</div></div></div></main></div>`;document.body.appendChild(planEl);
+const hh=h=>String(Math.floor(h)).padStart(2,'0')+':'+String(Math.round((h%1)*60)).padStart(2,'0'),qs=id=>document.getElementById(id),HALO='paint-order="stroke" stroke="#050e1b" stroke-width="3" stroke-linejoin="round"';
+const band=(x0,y0,x1,y1,h,c,o)=>{const m=(x0+x1)/2;return`<path d="M${x0},${y0} C${m},${y0} ${m},${y1} ${x1},${y1} L${x1},${y1+h} C${m},${y1+h} ${m},${y0+h} ${x0},${y0+h} Z" fill="${c}" opacity="${o}"/>`};
+function sankeyTime(acts,W,lab){const sm=W<620,T=acts.reduce((s,a)=>s+a.h,0),H=sm?360:320,pt=44,pb=12,gap=9,nw=12,x0=10,x1=W*(sm?.34:.33),x2=W*(sm?.76:.8),avail=H-pt-pb-(acts.length-1)*gap,sc=avail/T,ly=pt+(avail+(acts.length-1)*gap-T*sc)/2;
+ const mro=acts.filter(a=>!(a.g&&scen===2)),gr=acts.filter(a=>a.g&&scen===2),mH=mro.reduce((s,a)=>s+a.h,0),gH2=gr.reduce((s,a)=>s+a.h,0),dg=gr.length?44:0,dy0=pt+((H-pt-pb)-((mH+gH2)*sc+dg))/2;
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect x="${x0}" y="${ly}" width="${nw}" height="${T*sc}" rx="3" fill="#6ff2ff"/><text x="${x0}" y="${ly-10}" font-size="11" font-weight="800" fill="#cfeaff" letter-spacing="1">AIRCRAFT · ${hh(T)}</text>`;
+ let cum=0,y=pt,cm=0,cg=0;acts.forEach(a=>{const h=a.h*sc,toG=a.g&&scen===2,dy=toG?dy0+mH*sc+dg+cg:dy0+cm;s+=band(x0+nw,ly+cum,x1,y,h,a.c,.4)+`<rect x="${x1}" y="${y}" width="${nw}" height="${h}" rx="3" fill="${a.c}"/>`+band(x1+nw,y,x2,dy,h,a.c,.4)+`<text x="${x1+nw+8}" y="${y+h/2+4}" font-size="11" fill="#eaf6ff" ${HALO}>${sm?a.s:a.n} · ${hh(a.h)}</text>`;if(toG)cg+=h;else cm+=h;cum+=h;y+=h+gap});
+ s+=`<rect x="${x2}" y="${dy0}" width="${nw}" height="${mH*sc}" rx="3" fill="#37d4ff"/><text x="${x2+nw}" y="${dy0-20}" text-anchor="end" font-size="11" font-weight="800" fill="#cfeaff" letter-spacing="1">${lab[0]}</text><text x="${x2+nw}" y="${dy0-6}" text-anchor="end" font-size="11" fill="#9fe3ff">${lab[1]}</text>`;
+ if(gr.length){const gy=dy0+mH*sc+dg;s+=`<rect x="${x2}" y="${gy}" width="${nw}" height="${gH2*sc}" rx="3" fill="#3dff7a"/><text x="${x2+nw}" y="${gy-20}" text-anchor="end" font-size="11" font-weight="800" fill="#cfeaff" letter-spacing="1">${lab[2]}</text><text x="${x2+nw}" y="${gy-6}" text-anchor="end" font-size="11" fill="#9fffbf">${lab[3]}</text>`}
+ return s+'</svg>'}
+function sankeyFleet(N,B,d,W){const sm=W<460,base=Math.floor(N/B),ex=N%B,ns=[...Array(B)].map((_,i)=>base+(i<ex?1:0)).filter(n=>n>0),b=ns.length,H=Math.max(230,b*40+90),pt=44,pb=12,gap=b>1?10:0,nw=12,x0=10,x1=W*.4,x2=W*.78,avail=H-pt-pb-(b-1)*gap,k=avail/N,ly=pt+(avail+(b-1)*gap-N*k)/2;
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect x="${x0}" y="${ly}" width="${nw}" height="${N*k}" rx="3" fill="#6ff2ff"/><text x="${x0}" y="${ly-10}" font-size="11" font-weight="800" fill="#cfeaff" letter-spacing="1">FLEET · ${N} AIRCRAFT</text><rect x="${x2}" y="${ly}" width="${nw}" height="${N*k}" rx="3" fill="#3dff7a"/><text x="${x2+nw}" y="${ly-22}" text-anchor="end" font-size="11" font-weight="800" fill="#cfeaff" letter-spacing="1">CONNECTED FLEET</text><text x="${x2+nw}" y="${ly-8}" text-anchor="end" font-size="11" fill="#9fffbf">${N} AC · ${(Math.max(...ns)*d).toFixed(0)} days</text>`;
+ let cum=0,y=pt;const cols=['#37d4ff','#9b8bff','#ffb02e','#ff6a7a','#6ff2ff','#3dff7a'];ns.forEach((n,i)=>{const h=n*k,c=cols[i%6];s+=band(x0+nw,ly+cum,x1,y,h,c,.4)+`<rect x="${x1}" y="${y}" width="${nw}" height="${h}" rx="3" fill="${c}"/>`+band(x1+nw,y,x2,ly+cum,h,c,.4)+`<text x="${x1+nw+8}" y="${y+h/2+4}" font-size="11" fill="#eaf6ff" ${HALO}>${sm?'':'Bay '+(i+1)+' · '}${n} AC · ${(n*d).toFixed(0)} d</text>`;cum+=h;y+=h+gap});
+ return s+'</svg>'}
+function planCalc(){const g=id=>+qs(id).value;['cP','cH','cC','cT','nA','nB'].forEach(i=>qs('v_'+i).textContent=g(i));
+ const cP=g('cP'),cH=g('cH'),cC=g('cC'),cT=g('cT'),N=g('nA'),B=g('nB'),tP=48/cP,tH=56/cH,tC=80/cC,tT=4/cT,main=tH+tC,ant=18,mid=Math.max(main,ant),el=1.5+tP+mid+tT+8.5,dl=el-36,wv=Math.ceil(N/B),d1=Math.ceil(el/16*2)/2,d2=Math.ceil((el-7)/24*2)/2,dsel=scen===1?d1:d2,fsel=wv*dsel,f1=wv*d1,f2=wv*d2;
+ qs('kEl').textContent=hh(el);qs('kElS').textContent=(Math.abs(dl)<.02?'= BASELINE · ':(dl<0?'▼ '+hh(-dl)+' FASTER · ':'▲ '+hh(dl)+' SLOWER · '))+'PEAK CREW '+Math.max(cP,cH,cC,cT,2);qs('kElS').style.color=dl<-.02?'#3dff7a':dl>.02?'#ff8a9a':'#8fd8ff';
+ qs('kD').textContent=dsel.toFixed(1);qs('kDs').textContent=scen===1?'STANDARD · 16 H/DAY · INCL. INSPECTION + SW':'NOSE-TO-NOSE · 24 H/DAY · SW AT NIGHT GROUND';
+ qs('kF').textContent=fsel.toFixed(0)+' d';qs('kFs').textContent='≈ '+(fsel/7).toFixed(1)+' WEEKS · '+N+' AIRCRAFT · '+B+' BAY'+(B>1?'S':'');
+ qs('kVl').textContent=scen===2?'SAVING VS STANDARD':'NOSE-TO-NOSE WOULD SAVE';qs('kV').textContent=Math.max(0,f1-f2).toFixed(0)+' d';qs('kVs').textContent=(f1>0?Math.round((f1-f2)/f1*100):0)+'% SHORTER FLEET PROGRAMME';
+ const m=qs('rMsg');m.textContent=ant>main+.05?`Antenna cure chain (18 h) is the bottleneck. HW + cabling has ${(ant-main).toFixed(1)} h slack, so extra crew will not shorten the schedule.`:main>ant+.05?`HW + cabling (${main.toFixed(1)} h) is the critical path. The antenna chain has ${(main-ant).toFixed(1)} h of slack.`:'Balanced: HW + cabling and the antenna chain both take 18 h. Adding crew shortens only HW and cabling until the antenna chain becomes critical.';
+ const acts=[{n:'QC acceptance',s:'QC',h:1.5,c:'#9b8bff'},{n:'Panel removal',s:'Panels',h:tP,c:'#37d4ff'},{n:'HW + cabling ‖ antenna',s:'HW+cable',h:mid,c:'#3dff7a'},{n:'Wiring test',s:'Test',h:tT,c:'#ff6a7a'},{n:'Final QC',s:'QC',h:1.5,c:'#9b8bff'},{n:'SW upload',s:'SW',h:6,c:'#6ff2ff',g:1},{n:'E2E test',s:'E2E',h:1,c:'#6ff2ff',g:1}];
+ const lab=scen===1?['MRO BAY · ALL WORK',hh(el)+' · '+d1.toFixed(1)+' days @ 16 h/day']:['MRO BAY · NOSE-TO-NOSE',hh(el-7)+' · '+d2.toFixed(1)+' days @ 24 h/day','NIGHT GROUND STOP','SW UPLOAD + E2E · '+hh(7)];
+ const w1=qs('sk1').clientWidth||720,w2=qs('sk2').clientWidth||520;qs('sk1').innerHTML=sankeyTime(acts,w1,lab);qs('sk2').innerHTML=sankeyFleet(N,B,dsel,w2)}
+planEl.addEventListener('input',planCalc);planEl.addEventListener('keydown',e=>e.stopPropagation());planEl.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{scen=+b.dataset.s;planEl.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));planCalc()});
+{const pb=document.createElement('button');pb.className='cb';pb.style.right='214px';pb.style.borderColor='#6adcffaa';pb.style.background='#06223acc';pb.style.color='#d9f6ff';pb.textContent='◈ SCENARIO PLANNER';pb.onclick=()=>{planEl.style.display='flex';planCalc()};dashEl.appendChild(pb)}
+qs('planX').onclick=()=>{planEl.style.display='none'};addEventListener('keydown',e=>{if(e.key==='Escape'){planEl.style.display='none';closeInfo()}});addEventListener('resize',()=>{if(planEl.style.display==='flex')planCalc()});
+
+// single red laser from the aircraft to the active site (no amber/yellow link)
+function updateHandover(tm,inGround){
+ hoHud.style.display=inGround?'block':'none';
+ if(!inGround){siteBeams.forEach(b=>b.group.visible=false);return}
+ const x=airplane.position.x,cut1=-6,cut2=6,cur2=x<cut1?0:x<cut2?1:2;
+ for(let i=0;i<siteBeams.length;i++)aimBeam(siteBeams[i],i,i===cur2?1:0,(tm*.0005)%1,false);
+ const near=Math.abs(x-cut1)<2.3||Math.abs(x-cut2)<2.3;
+ hoHud.innerHTML='<span style="color:#ff4b62">● CONNECTED · RED RF LASER</span><br>ACTIVE GSM SITE '+String.fromCharCode(65+cur2)+(near?' &nbsp;·&nbsp; <span style="color:#ff9aa8">SWITCHING SITE</span>':'')+'<br><small style="color:#b9cee2">Aircraft ↔ ground site · simulated radio link</small>';
+}
+[altLine,alt3,altitudeRuler,uplink].forEach(o=>o.visible=false);
+function postFrame(tm){
+ if(introActive&&introHours>=36){if(!window.__t36)window.__t36=tm;else if(tm-window.__t36>1000)endIntro()}
+ const h=introHours,pre=introPrePhase,si=pre?0:stageAt(h);
+ if(!introActive){if(!fxDone){fxDone=true;A.position.x=0;[P,racks,drill,seal,qcPlane,...sparks,...swPk,swLap,...nrays,...nr,...men].forEach(o=>o.visible=false);panels.forEach(p=>p.m.visible=false);wires.forEach(w=>{w.visible=true;w.userData.cn.forEach(c=>c.visible=true);w.geometry.setDrawRange(0,1e5);w.material.color.setHex(w.userData.c);w.material.emissive.setHex(w.userData.c)});cables.forEach(c=>{c.visible=true;c.geometry.setDrawRange(0,1e5)});cables.forEach(c=>c.visible=false);pulses.forEach(q=>q.s.visible=true);dedic.forEach(c=>{c.visible=true;c.geometry.setDrawRange(0,1e5)});window.__ties.visible=true;trayG.visible=true;trayM.opacity=.5;edgeM.opacity=.8;cabL.forEach(e=>e[0].style.display='none');for(const k in items)items[k].forEach(it=>{it.g.visible=true;it.g.scale.setScalar(1);it.g.position.y=it.g.userData.by});cpS.forEach(s=>{s.g.visible=true;s.lev.rotation.x=i0(s)?-.5:.5;s.led.material.color.setHex(0x3dff7a)});rj.visible=false;rj.userData.cn.forEach(c=>c.visible=false);rjL.style.display='none';kitEl.style.display='none';hud.style.display='none';crL.forEach(e=>e.style.display='none')}
+  if(cur!==lastCur){lastCur=cur;slideT=tm}else if(autoOn&&!drag&&cur!==9&&tm-slideT>(cur===8?21400:cur===7?13000:8500))go(cur+1);
+  dashFrame(tm);anaFrame(tm);for(const [e,p] of gl)projL(e,p,G.visible&&cur>=7);
+  const t=tm*.0003;rings.forEach(([r,o])=>{const p=(t+o)%1;r.scale.setScalar(.2+p*7.3);r.material.opacity=.55*(1-p)});lobes.forEach((c,i)=>c.material.opacity=.04+.03*Math.sin(tm*.003+i));
+  alt3.scale.y=10;alt3.position.set(airplane.position.x,1.8,0);return}
+ hud.style.display='block';P.visible=pre||h<.2;
+ // taxi-in
+ A.position.x=pre?LL(-48,0,ez(seg(introPreSeconds,8.7,11))):0;
+ // crates + logistics inspection
+ const hudPre=preFrame(tm,pre);
+ lg.forEach((m,i)=>{m.position.y=-4.95+Math.abs(Math.sin(tm*.004+i))*.05});
+ // panels
+ panels.forEach((p,i)=>{const p0=1.5+i*(5.5/18),pr=ez(seg(h,p0,p0+1.5));p.m.visible=!pre&&pr<.99;const k=p.k;p.m.material.opacity=.85*(1-pr);
+  if(k===0)p.m.position.y=p.y+pr*1.4;else if(k===1)p.m.position.y=p.y-pr*1.2;else p.m.position.z=p.z+pr*1.1;p.m.rotation.z=pr*.5*(i%2?1:-1)});
+ // racks + hardware
+ racks.visible=h>=7.5;racks.scale.setScalar(.01+ez(seg(h,7.5,8.6))*.99);
+ let hwN=0;
+ for(const k in items)items[k].forEach((it,j)=>{const a=hwAt[k]+(k==='wap'?j*1.1:0),e=ez(seg(h,a,a+.9));if(it.g.userData.by===undefined)it.g.userData.by=it.g.position.y;it.g.visible=!pre&&h>=a;it.g.scale.setScalar(.01+e*.99);it.g.position.y=it.g.userData.by+(1-e)*(k==='ant'?-1:1.1);if(e>.98&&k!=='ant'&&k!=='cp')hwN++});
+ // antenna drill + seal
+ const dr=seg(h,7.5,11.5);drill.visible=dr>0&&dr<1&&!pre;drill.rotation.y=tm*.05;drill.position.y=-2.25+dr*.2;sparks.forEach((s,i)=>{s.visible=drill.visible;s.position.set(7+Math.sin(tm*.02+i*2)*.25,-2+Math.abs(Math.sin(tm*.013+i))*.3,Math.cos(tm*.017+i)*.2)});
+ const sp=seg(h,11.5,23.5);seal.visible=h>=11.5&&!pre;hole.visible=h>=8&&!pre;const th=Math.max(.02,sp*6.283);if(Math.abs(th-lastSeal)>.03){lastSeal=th;seal.geometry.dispose();seal.geometry=new THREE.RingGeometry(.23,.28,48,1,0,th)}seal.material.color.setHex(sp>=1?0xffffff:0xffc84a);
+ // antenna status
+ const ps=document.getElementById('parallelStatus');if(!pre)ps.textContent=h<7.5?'ANTENNA WORK STARTS AT 07:30':h<11.5?'ANTENNA · DRILLING HOLES · '+Math.round(seg(h,7.5,11.5)*100)+'%':h<23.5?'SEALANT CURING · WAIT 12 HR · '+Math.round(seg(h,11.5,23.5)*100)+'%':h<25.5?'ANTENNA INSTALLATION · '+Math.round(seg(h,23.5,25.5)*100)+'%':'ANTENNA INSTALLED & SEALED';
+ // wires
+ const wp=seg(h,15.5,25.5),tp=seg(h,25.5,27.5);window.__ties.visible=!pre&&h>=25.5;trayG.visible=!pre&&h>=15.5;trayM.opacity=.5*ez(seg(h,15.5,17.5));edgeM.opacity=.8*ez(seg(h,15.5,17.5));
+ const nW=wires.length;let doneN=0;wires.forEach((w,i)=>{const a=15.5+i*(9.5/nW),q=ez(seg(h,a,a+1.5));if(q>=.999)doneN++;w.visible=!pre&&q>0;w.userData.cn.forEach((c,ci)=>c.visible=!pre&&(ci?q>.97:q>.02));w.geometry.setDrawRange(0,Math.floor(w.geometry.index.count/6*q)*6);const ok=tp>i/nW;w.material.color.setHex(ok?0x3dff7a:w.userData.c);w.material.emissive.setHex(ok?0x1fbf55:w.userData.c)});const curW=wires[Math.min(nW-1,doneN)].userData.n;
+ cpS.forEach((s,i)=>{s.g.visible=!pre&&h>=16.2;const on=i===0?(h>27&&h<27.5):h>=[0,26,26.4,26.8][i];s.lev.rotation.x=on?-.5:.5;s.led.material.color.setHex(on?(i===0?0xffb02e:0x3dff7a):0x444444)});
+ cabL.forEach(e=>projL(e[0],e[1],!pre&&h>=e[2]&&h<29));
+ cables.forEach((c,i)=>{const q=cl01(wp*1.6);c.visible=false;c.geometry.setDrawRange(0,Math.floor(c.geometry.index.count/3*q)*3)});
+ pulses.forEach(p=>p.s.visible=false);
+ // QC scans
+ const q1=h<1.5&&!pre&&h>0?seg(h,0,1.5):h>=27.5&&h<29?seg(h,27.5,29):-1;qcPlane.visible=q1>=0;qcPlane.position.x=LL(-14,17,q1);
+ // software upload + network test
+ const sw=seg(h,29,35),on8=h>=29&&h<35;swLap.visible=h>=29&&!pre;if(tm-lastBin>170){lastBin=tm;hb=binStr()}const rp=ez(seg(h,29,29.8));rj.visible=h>=29&&!pre;rj.userData.cn.forEach((c,ci)=>c.visible=rj.visible&&(ci?rp>.97:rp>.02));rj.geometry.setDrawRange(0,Math.floor(rj.geometry.index.count/6*rp)*6);projL(rjL,V(11.95,-.4,.9),h>=29.3&&h<35.5&&!pre);if(on8&&tm-lastLap>200){lastLap=tm;drawLap(sw)}if(h>=35)drawLap(1);swPk.forEach((s,i)=>{s.visible=on8;const u=(tm*.00035+i/12)%1;if(u<s.userData.last)drawBin(s);s.userData.last=u;s.position.copy(rj.userData.curve.getPoint(u));s.position.y+=.14;s.scale.set(.55,.11,1);s.material.opacity=Math.sin(u*3.14)});
+ const nt=seg(h,35,36),onN=h>=35;const waps=items.wap.map(w=>w.g.position);nrays.forEach((r,i)=>{r.visible=onN;if(onN)aimC(r,V(7,-1.97,0),V(waps[i].x,waps[i].y,0))});nr.forEach((r,i)=>{r.visible=onN;const p=(tm*.0005+i/3)%1;r.scale.setScalar(.2+p*3);r.material.opacity=.7*(1-p)});
+ // crew
+ const cp=crew[si]||[];men.forEach((m,i)=>{const p=cp[i];m.visible=!!p;if(p){m.position.x+=(p[0]-m.position.x)*.08;m.position.y=p[1]+Math.abs(Math.sin(tm*.006+i))*.03;m.position.z+=(p[2]-m.position.z)*.08;m.rotation.y=tm*.0006+i}});
+ // HUD
+ const wn=Math.round(wp*300);hud.textContent=pre?hudPre+' · NOT COUNTED IN CLOCK':si===1?'TAXI TO MRO · CLOCK STARTS 00:00':si===2?'QUALITY INSPECTION · AIRCRAFT CONDITION & ACCESS':si===3?'REMOVING PANELS · CABIN · CARGO · AVIONICS BAY · '+Math.round(seg(h,1.5,7.5)*100)+'%':si===4?'HARDWARE MOUNTED '+Math.min(6,hwN)+' / 6 · CS · RRH · BMU · 3 CWAP · RACKS · ANTENNA HOLES DRILLED, SEALANT APPLIED':si===5?'CABLE '+Math.min(doneN+1,nW)+' / '+nW+' · '+curW+' · SEALANT CURING '+Math.round(sp*100)+'%':si===6?'POWER-UP + CONTINUITY · '+Math.round(tp*100)+'% · CP SWITCHES ON · RESET TOGGLE':si===7?'FINAL QUALITY INSPECTION':si===8?'SKYFIVE ENGINEER · SW UPLOAD '+Math.round(sw*100)+'% · '+hb+' · LAPTOP → RJ48 → CS':'E2E TEST · ANTENNA → RRH → BMU → CS → 3 WAP · '+Math.round(nt*100)+'%';
+}
+
+requestAnimationFrame(loop);
+</script></body></html>
